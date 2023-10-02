@@ -46,6 +46,7 @@ License ${pkg.license}${!minimize ? '\n\n' + license : ''}`
             },
           ],
         },
+        { test: /\.ts$/, loader: 'ts-loader' },
       ],
     },
     node: false,
@@ -83,6 +84,7 @@ License ${pkg.license}${!minimize ? '\n\n' + license : ''}`
         Inspector: path.resolve(__dirname, 'src/tools/Inspector'),
         Serializer: path.resolve(__dirname, 'src/tools/Serializer'),
       },
+      extensions: ['.ts', '.js'],
     },
     externals: {
       'matter-js': {
