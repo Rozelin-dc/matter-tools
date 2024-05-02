@@ -15,7 +15,7 @@ module.exports = (env = {}) => {
   const commitHash = execSync('git rev-parse --short HEAD').toString().trim()
   const version = !alpha ? pkg.version : `${pkg.version}-alpha+${commitHash}`
   const license = fs.readFileSync('LICENSE', 'utf8')
-  const name = pkg.name
+  const name = 'matter-tools'
   const alphaInfo = 'Experimental pre-release build.\n  '
 
   const banner = `${pkg.name} ${version} by @Rozelin
