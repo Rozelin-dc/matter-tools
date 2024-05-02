@@ -1,0 +1,51 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+    branches-ignore:
+      - '**'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: 'publish'
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: |
+          git config user.name  "actions-user"
+          git config user.email "action@github.com"
+          git pull
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - name: Set version
+        run: echo VERSION=$(echo ${GITHUB_REF:10}) >> $GITHUB_ENV
+      - run: npm version ${{ env.VERSION }}
+      - run: npm run build-split
+      - run: npm run build
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: build ${{ env.VERSION }}
+          title: build ${{ env.VERSION }}
+          base: main
+          branch: build-by-actions
+          delete-branch: true
