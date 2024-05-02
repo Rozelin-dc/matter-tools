@@ -1,51 +1,25 @@
-# matter-tools
+# Matter Tools
+This library is a TypeScript adaptation of [Matter Tools](https://github.com/liabru/matter-tools). The main usage is the same as [Matter Tools](https://github.com/liabru/matter-tools). See [the README of Matter Tools](https://github.com/liabru/matter-tools/blob/master/README.md) for details.
 
-> Tools for creating, testing and debugging matter.js worlds
+## install
+```bash
+npm install @rozelin/matter-tools
+```
 
-## Demo
+## Type Declaration Usage
+If you want to import and use interface definitions, etc., you can write as follows.
 
-See the [demo](http://liabru.github.io/matter-tools/).
+```ts
+import MatterTools, { Gui } from '@rozelin/matter-tools'
 
-## Tools
+const Gui: Gui.IGui = MatterTools.Gui.create()
+```
 
-- `MatterTools.Demo` for running and testing examples
-- `MatterTools.Gui` for experimenting with engine properties
-- `MatterTools.Inspector` for inspecting composites, bodies and constraints
-- `MatterTools.Serializer` for saving and loading state (experimental)
+or
 
-Each tool can be used independently as needed.
+```ts
+import * as MatterToolsTypes from '@rozelin/matter-ts'
+const MatterTools = MatterToolsTypes.default
 
-## Install
-
-You can install using [npm](https://www.npmjs.com/):
-
-    npm install matter-tools
-
-### Bundles
-
-Alternatively the following complete bundle is provided for convenience
-
-- [build/matter-tools.js](https://github.com/liabru/matter-tools/blob/master/build)
-
-Individual smaller bundles for each tool are also available
-- [build/matter-tools.demo.js](https://github.com/liabru/matter-tools/blob/master/build)
-- [build/matter-tools.gui.js](https://github.com/liabru/matter-tools/blob/master/build) (bundles [dat.gui](https://github.com/dataarts/dat.gui))
-- [build/matter-tools.inspector.js](https://github.com/liabru/matter-tools/blob/master/build) (bundles [keymaster](https://github.com/madrobby/keymaster), [jquery](https://github.com/jquery/jquery), [jstree](https://github.com/vakata/jstree))
-- [build/matter-tools.serializer.js](https://github.com/liabru/matter-tools/blob/master/build) (bundles [resurrect-js](https://github.com/skeeto/resurrect-js))
-
-See the section below regarding license.
-
-## Usage
-
-See the [demo source](https://github.com/liabru/matter-tools/tree/master/docs) 
-for a usage example.
-
-## Documentation
-
-See the [API docs](https://github.com/liabru/matter-tools/blob/master/API.md) for documentation.
-
-## License
-
-`matter-tools` is released under MIT see [LICENSE](https://github.com/liabru/matter-tools/blob/master/LICENSE)
-
-Dependencies are used under their own individual respective licenses, consult their documentation for information.
+const Gui: MatterToolsTypes.Gui.IGui = MatterTools.Gui.create()
+```

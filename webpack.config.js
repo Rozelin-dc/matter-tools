@@ -18,12 +18,12 @@ module.exports = (env = {}) => {
   const name = pkg.name
   const alphaInfo = 'Experimental pre-release build.\n  '
 
-  const banner = `${pkg.name} ${version} by @liabru
+  const banner = `${pkg.name} ${version} by @Rozelin
 ${alpha ? alphaInfo : ''}${pkg.homepage}
 License ${pkg.license}${!minimize ? '\n\n' + license : ''}`
 
   return {
-    entry: { [name]: './src/index' },
+    entry: { [name]: './src/matter-tools.ts' },
     output: {
       library: 'MatterTools',
       publicPath: '/demo/lib/',
@@ -87,10 +87,10 @@ License ${pkg.license}${!minimize ? '\n\n' + license : ''}`
       extensions: ['.ts', '.js'],
     },
     externals: {
-      'matter-js': {
-        commonjs: 'matter-js',
-        commonjs2: 'matter-js',
-        amd: 'matter-js',
+      '@rozelin/matter-ts': {
+        commonjs: '@rozelin/matter-ts',
+        commonjs2: '@rozelin/matter-ts',
+        amd: '@rozelin/matter-ts',
         root: 'Matter',
       },
     },

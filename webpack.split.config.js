@@ -89,10 +89,10 @@ License ${pkg.license}${!minimize ? '\n\n' + license : ''}`
       extensions: ['.ts', '.js'],
     },
     externals: {
-      'matter-js': {
-        commonjs: 'matter-js',
-        commonjs2: 'matter-js',
-        amd: 'matter-js',
+      '@rozelin/matter-ts': {
+        commonjs: '@rozelin/matter-ts',
+        commonjs2: '@rozelin/matter-ts',
+        amd: '@rozelin/matter-ts',
         root: 'Matter',
       },
       'matter-tools': {
