@@ -1,5 +1,5 @@
 /*!
- * matter-tools 0.0.0 by @liabru
+ * @rozelin/matter-tools 1.0.0 by @Rozelin
  * https://github.com/Rozelin-dc/matter-tools
  * License MIT
  *
@@ -31,564 +31,16 @@
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("matter-js"));
+		module.exports = factory(require("@rozelin/matter-ts"));
 	else if(typeof define === 'function' && define.amd)
-		define("MatterTools", ["matter-js"], factory);
+		define("MatterTools", ["@rozelin/matter-ts"], factory);
 	else if(typeof exports === 'object')
-		exports["MatterTools"] = factory(require("matter-js"));
+		exports["MatterTools"] = factory(require("@rozelin/matter-ts"));
 	else
 		root["MatterTools"] = factory(root["Matter"]);
-})(this, (__WEBPACK_EXTERNAL_MODULE__759__) => {
+})(this, (__WEBPACK_EXTERNAL_MODULE__381__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ 378:
-/***/ ((module) => {
-
-/**
- * # ResurrectJS
- * @version 1.0.3
- * @license Public Domain
- *
- * ResurrectJS preserves object behavior (prototypes) and reference
- * circularity with a special JSON encoding. Unlike regular JSON,
- * Date, RegExp, DOM objects, and `undefined` are also properly
- * preserved.
- *
- * ## Examples
- *
- * function Foo() {}
- * Foo.prototype.greet = function() { return "hello"; };
- *
- * // Behavior is preserved:
- * var necromancer = new Resurrect();
- * var json = necromancer.stringify(new Foo());
- * var foo = necromancer.resurrect(json);
- * foo.greet();  // => "hello"
- *
- * // References to the same object are preserved:
- * json = necromancer.stringify([foo, foo]);
- * var array = necromancer.resurrect(json);
- * array[0] === array[1];  // => true
- * array[1].greet();  // => "hello"
- *
- * // Dates are restored properly
- * json = necromancer.stringify(new Date());
- * var date = necromancer.resurrect(json);
- * Object.prototype.toString.call(date);  // => "[object Date]"
- *
- * ## Options
- *
- * Options are provided to the constructor as an object with these
- * properties:
- *
- *   prefix ('#'): A prefix string used for temporary properties added
- *     to objects during serialization and deserialization. It is
- *     important that you don't use any properties beginning with this
- *     string. This option must be consistent between both
- *     serialization and deserialization.
- *
- *   cleanup (false): Perform full property cleanup after both
- *     serialization and deserialization using the `delete`
- *     operator. This may cause performance penalties (breaking hidden
- *     classes in V8) on objects that ResurrectJS touches, so enable
- *     with care.
- *
- *   revive (true): Restore behavior (__proto__) to objects that have
- *     been resurrected. If this is set to false during serialization,
- *     resurrection information will not be encoded. You still get
- *     circularity and Date support.
- *
- *   resolver (Resurrect.NamespaceResolver(window)): Converts between
- *     a name and a prototype. Create a custom resolver if your
- *     constructors are not stored in global variables. The resolver
- *     has two methods: getName(object) and getPrototype(string).
- *
- * For example,
- *
- * var necromancer = new Resurrect({
- *     prefix: '__#',
- *     cleanup: true
- * });
- *
- * ## Caveats
- *
- *   * With the default resolver, all constructors must be named and
- *   stored in the global variable under that name. This is required
- *   so that the prototypes can be looked up and reconnected at
- *   resurrection time.
- *
- *   * The wrapper objects Boolean, String, and Number will be
- *   unwrapped. This means extra properties added to these objects
- *   will not be preserved.
- *
- *   * Functions cannot ever be serialized. Resurrect will throw an
- *   error if a function is found when traversing a data structure.
- *
- * @see http://nullprogram.com/blog/2013/03/28/
- */
-
-/**
- * @param {Object} [options] See options documentation.
- * @namespace
- * @constructor
- */
-function Resurrect(options) {
-    this.table = null;
-    this.prefix = '#';
-    this.cleanup = false;
-    this.revive = true;
-    for (var option in options) {
-        if (options.hasOwnProperty(option)) {
-            this[option] = options[option];
-        }
-    }
-    this.refcode = this.prefix + 'id';
-    this.origcode = this.prefix + 'original';
-    this.buildcode = this.prefix + '.';
-    this.valuecode = this.prefix + 'v';
-}
-
-module.exports = Resurrect;
-
-/**
- * Portable access to the global object (window, global).
- * Uses indirect eval.
- * @constant
- */
-Resurrect.GLOBAL = (0, eval)('this');
-
-/**
- * Escape special regular expression characters in a string.
- * @param {string} string
- * @returns {string} The string escaped for exact matches.
- * @see http://stackoverflow.com/a/6969486
- */
-Resurrect.escapeRegExp = function (string) {
-    return string.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-};
-
-/* Helper Objects */
-
-/**
- * @param {string} [message]
- * @constructor
- */
-Resurrect.prototype.Error = function ResurrectError(message) {
-    this.message = message || '';
-    this.stack = new Error().stack;
-};
-Resurrect.prototype.Error.prototype = Object.create(Error.prototype);
-Resurrect.prototype.Error.prototype.name = 'ResurrectError';
-
-/**
- * Resolves prototypes through the properties on an object and
- * constructor names.
- * @param {Object} scope
- * @constructor
- */
-Resurrect.NamespaceResolver = function(scope) {
-    this.scope = scope;
-};
-
-/**
- * Gets the prototype of the given property name from an object. If
- * not found, it throws an error.
- * @param {string} name
- * @returns {Object}
- * @method
- */
-Resurrect.NamespaceResolver.prototype.getPrototype = function(name) {
-    var constructor = this.scope[name];
-    if (constructor) {
-        return constructor.prototype;
-    } else {
-        throw new Resurrect.prototype.Error('Unknown constructor: ' + name);
-    }
-};
-
-/**
- * Get the prototype name for an object, to be fetched later with getPrototype.
- * @param {Object} object
- * @returns {?string} Null if the constructor is Object.
- * @method
- */
-Resurrect.NamespaceResolver.prototype.getName = function(object) {
-    var constructor = object.constructor.name;
-    if (constructor == null) { // IE
-        var funcPattern = /^\s*function\s*([A-Za-z0-9_$]*)/;
-        constructor = funcPattern.exec(object.constructor)[1];
-    }
-
-    if (constructor === '') {
-        var msg = "Can't serialize objects with anonymous constructors.";
-        throw new Resurrect.prototype.Error(msg);
-    } else if (constructor === 'Object' || constructor === 'Array') {
-        return null;
-    } else {
-        return constructor;
-    }
-};
-
-/* Set the default resolver searches the global object. */
-Resurrect.prototype.resolver =
-    new Resurrect.NamespaceResolver(Resurrect.GLOBAL);
-
-/**
- * Create a DOM node from HTML source; behaves like a constructor.
- * @param {string} html
- * @constructor
- */
-Resurrect.Node = function(html) {
-    var div = document.createElement('div');
-    div.innerHTML = html;
-    return div.firstChild;
-};
-
-/* Type Tests */
-
-/**
- * @param {string} type
- * @returns {Function} A function that tests for type.
- */
-Resurrect.is = function(type) {
-    var string = '[object ' + type + ']';
-    return function(object) {
-        return Object.prototype.toString.call(object) === string;
-    };
-};
-
-Resurrect.isArray = Resurrect.is('Array');
-Resurrect.isString = Resurrect.is('String');
-Resurrect.isBoolean = Resurrect.is('Boolean');
-Resurrect.isNumber = Resurrect.is('Number');
-Resurrect.isFunction = Resurrect.is('Function');
-Resurrect.isDate = Resurrect.is('Date');
-Resurrect.isRegExp = Resurrect.is('RegExp');
-Resurrect.isObject = Resurrect.is('Object');
-
-Resurrect.isAtom = function(object) {
-    return !Resurrect.isObject(object) && !Resurrect.isArray(object);
-};
-
-/**
- * @param {*} object
- * @returns {boolean} True if object is a primitive or a primitive wrapper.
- */
-Resurrect.isPrimitive = function(object) {
-    return object == null ||
-        Resurrect.isNumber(object) ||
-        Resurrect.isString(object) ||
-        Resurrect.isBoolean(object);
-};
-
-/* Methods */
-
-/**
- * Create a reference (encoding) to an object.
- * @param {(Object|undefined)} object
- * @returns {Object}
- * @method
- */
-Resurrect.prototype.ref = function(object) {
-    var ref = {};
-    if (object === undefined) {
-        ref[this.prefix] = -1;
-    } else {
-        ref[this.prefix] = object[this.refcode];
-    }
-    return ref;
-};
-
-/**
- * Lookup an object in the table by reference object.
- * @param {Object} ref
- * @returns {(Object|undefined)}
- * @method
- */
-Resurrect.prototype.deref = function(ref) {
-    return this.table[ref[this.prefix]];
-};
-
-/**
- * Put a temporary identifier on an object and store it in the table.
- * @param {Object} object
- * @returns {number} The unique identifier number.
- * @method
- */
-Resurrect.prototype.tag = function(object) {
-    if (this.revive) {
-        var constructor = this.resolver.getName(object);
-        if (constructor) {
-            var proto = Object.getPrototypeOf(object);
-            if (this.resolver.getPrototype(constructor) !== proto) {
-                throw new this.Error('Constructor mismatch!');
-            } else {
-                object[this.prefix] = constructor;
-            }
-        }
-    }
-    object[this.refcode] = this.table.length;
-    this.table.push(object);
-    return object[this.refcode];
-};
-
-/**
- * Create a builder object (encoding) for serialization.
- * @param {string} name The name of the constructor.
- * @param value The value to pass to the constructor.
- * @returns {Object}
- * @method
- */
-Resurrect.prototype.builder = function(name, value) {
-    var builder = {};
-    builder[this.buildcode] = name;
-    builder[this.valuecode] = value;
-    return builder;
-};
-
-/**
- * Build a value from a deserialized builder.
- * @param {Object} ref
- * @returns {Object}
- * @method
- * @see http://stackoverflow.com/a/14378462
- * @see http://nullprogram.com/blog/2013/03/24/
- */
-Resurrect.prototype.build = function(ref) {
-    var type = ref[this.buildcode].split(/\./).reduce(function(object, name) {
-        return object[name];
-    }, Resurrect.GLOBAL);
-    /* Brilliant hack by kybernetikos: */
-    var args = [null].concat(ref[this.valuecode]);
-    var factory = type.bind.apply(type, args);
-    var result = new factory();
-    if (Resurrect.isPrimitive(result)) {
-        return result.valueOf(); // unwrap
-    } else {
-        return result;
-    }
-};
-
-/**
- * Dereference or build an object or value from an encoding.
- * @param {Object} ref
- * @returns {(Object|undefined)}
- * @method
- */
-Resurrect.prototype.decode = function(ref) {
-    if (this.prefix in ref) {
-        return this.deref(ref);
-    } else if (this.buildcode in ref) {
-        return this.build(ref);
-    } else {
-        throw new this.Error('Unknown encoding.');
-    }
-};
-
-/**
- * @param {Object} object
- * @returns {boolean} True if the provided object is tagged for serialization.
- * @method
- */
-Resurrect.prototype.isTagged = function(object) {
-    return (this.refcode in object) && (object[this.refcode] != null);
-};
-
-/**
- * Visit root and all its ancestors, visiting atoms with f.
- * @param {*} root
- * @param {Function} f
- * @param {Function} replacer
- * @returns {*} A fresh copy of root to be serialized.
- * @method
- */
-Resurrect.prototype.visit = function(root, f, replacer) {
-    if (Resurrect.isAtom(root)) {
-        return f(root);
-    } else if (!this.isTagged(root)) {
-        var copy = null;
-        if (Resurrect.isArray(root)) {
-            copy = [];
-            root[this.refcode] = this.tag(copy);
-            for (var i = 0; i < root.length; i++) {
-                copy.push(this.visit(root[i], f, replacer));
-            }
-        } else { /* Object */
-            copy = Object.create(Object.getPrototypeOf(root));
-            root[this.refcode] = this.tag(copy);
-            for (var key in root) {
-                var value = root[key];
-                if (root.hasOwnProperty(key)) {
-                    if (replacer && value !== undefined) {
-                        // Call replacer like JSON.stringify's replacer
-                        value = replacer.call(root, key, root[key]);
-                        if (value === undefined) {
-                            continue; // Omit from result
-                        }
-                    }
-                    copy[key] = this.visit(value, f, replacer);
-                }
-            }
-        }
-        copy[this.origcode] = root;
-        return this.ref(copy);
-    } else {
-        return this.ref(root);
-    }
-};
-
-/**
- * Manage special atom values, possibly returning an encoding.
- * @param {*} atom
- * @returns {*}
- * @method
- */
-Resurrect.prototype.handleAtom = function(atom) {
-    var Node = Resurrect.GLOBAL.Node || function() {};
-    if (Resurrect.isFunction(atom)) {
-        throw new this.Error("Can't serialize functions.");
-    } else if (atom instanceof Node) {
-        var xmls = new XMLSerializer();
-        return this.builder('Resurrect.Node', [xmls.serializeToString(atom)]);
-    } else if (Resurrect.isDate(atom)) {
-        return this.builder('Date', [atom.toISOString()]);
-    } else if (Resurrect.isRegExp(atom)) {
-        var args = atom.toString().match(/\/(.+)\/([gimy]*)/).slice(1);
-        return this.builder('RegExp', args);
-    } else if (atom === undefined) {
-        return this.ref(undefined);
-    } else if (Resurrect.isNumber(atom) && (isNaN(atom) || !isFinite(atom))) {
-        return this.builder('Number', [atom.toString()]);
-    } else {
-        return atom;
-    }
-};
-
-/**
- * Hides intrusive keys from a user-supplied replacer.
- * @param {Function} replacer function of two arguments (key, value)
- * @returns {Function} A function that skips the replacer for intrusive keys.
- * @method
- */
-Resurrect.prototype.replacerWrapper = function(replacer) {
-    var skip = new RegExp('^' + Resurrect.escapeRegExp(this.prefix));
-    return function(k, v) {
-        if (skip.test(k)) {
-            return v;
-        } else {
-            return replacer(k, v);
-        }
-    };
-};
-
-/**
- * Serialize an arbitrary JavaScript object, carefully preserving it.
- * @param {*} object
- * @param {(Function|Array)} replacer
- * @param {string} space
- * @method
- */
-Resurrect.prototype.stringify = function(object, replacer, space) {
-    if (Resurrect.isFunction(replacer)) {
-        replacer = this.replacerWrapper(replacer);
-    } else if (Resurrect.isArray(replacer)) {
-        var acceptKeys = replacer;
-        replacer = function(k, v) {
-            return acceptKeys.indexOf(k) >= 0 ? v : undefined;
-        };
-    }
-    if (Resurrect.isAtom(object)) {
-        return JSON.stringify(this.handleAtom(object), replacer, space);
-    } else {
-        this.table = [];
-        this.visit(object, this.handleAtom.bind(this), replacer);
-        for (var i = 0; i < this.table.length; i++) {
-            if (this.cleanup) {
-                delete this.table[i][this.origcode][this.refcode];
-            } else {
-                this.table[i][this.origcode][this.refcode] = null;
-            }
-            delete this.table[i][this.refcode];
-            delete this.table[i][this.origcode];
-        }
-        var table = this.table;
-        this.table = null;
-        return JSON.stringify(table, null, space);
-    }
-};
-
-/**
- * Restore the __proto__ of the given object to the proper value.
- * @param {Object} object
- * @returns {Object} Its argument, or a copy, with the prototype restored.
- * @method
- */
-Resurrect.prototype.fixPrototype = function(object) {
-    if (this.prefix in object) {
-        var name = object[this.prefix];
-        var prototype = this.resolver.getPrototype(name);
-        if ('__proto__' in object) {
-            object.__proto__ = prototype;
-            if (this.cleanup) {
-                delete object[this.prefix];
-            }
-            return object;
-        } else { // IE
-            var copy = Object.create(prototype);
-            for (var key in object) {
-                if (object.hasOwnProperty(key) && key !== this.prefix) {
-                    copy[key] = object[key];
-                }
-            }
-            return copy;
-        }
-    } else {
-        return object;
-    }
-};
-
-/**
- * Deserialize an encoded object, restoring circularity and behavior.
- * @param {string} string
- * @returns {*} The decoded object or value.
- * @method
- */
-Resurrect.prototype.resurrect = function(string) {
-    var result = null;
-    var data = JSON.parse(string);
-    if (Resurrect.isArray(data)) {
-        this.table = data;
-        /* Restore __proto__. */
-        if (this.revive) {
-            for (var i = 0; i < this.table.length; i++) {
-                this.table[i] = this.fixPrototype(this.table[i]);
-            }
-        }
-        /* Re-establish object references and construct atoms. */
-        for (i = 0; i < this.table.length; i++) {
-            var object = this.table[i];
-            for (var key in object) {
-                if (object.hasOwnProperty(key)) {
-                    if (!(Resurrect.isAtom(object[key]))) {
-                        object[key] = this.decode(object[key]);
-                    }
-                }
-            }
-        }
-        result = this.table[0];
-    } else if (Resurrect.isObject(data)) {
-        this.table = [];
-        result = this.decode(data);
-    } else {
-        result = data;
-    }
-    this.table = null;
-    return result;
-};
-
-
-/***/ }),
 
 /***/ 13:
 /***/ (function(__unused_webpack_module, exports) {
@@ -963,452 +415,1018 @@ module.exports = "/*\n*\tMatterTools.Inspector\n*/\n\n.ins-container,\n.jstree {
 
 /***/ }),
 
-/***/ 138:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = {
-  Gui: __webpack_require__(945),
-  Inspector: __webpack_require__(142),
-  Demo: __webpack_require__(244),
-  Serializer: __webpack_require__(367)
-};
-
-/***/ }),
-
-/***/ 994:
-/***/ ((module) => {
+/***/ 332:
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
-* @class Common
-*/
+ * # ResurrectJS
+ * @version 1.0.3
+ * @license Public Domain
+ *
+ * ResurrectJS preserves object behavior (prototypes) and reference
+ * circularity with a special JSON encoding. Unlike regular JSON,
+ * Date, RegExp, DOM objects, and `undefined` are also properly
+ * preserved.
+ *
+ * ## Examples
+ *
+ * function Foo() {}
+ * Foo.prototype.greet = function() { return "hello"; };
+ *
+ * // Behavior is preserved:
+ * var necromancer = new Resurrect();
+ * var json = necromancer.stringify(new Foo());
+ * var foo = necromancer.resurrect(json);
+ * foo.greet();  // => "hello"
+ *
+ * // References to the same object are preserved:
+ * json = necromancer.stringify([foo, foo]);
+ * var array = necromancer.resurrect(json);
+ * array[0] === array[1];  // => true
+ * array[1].greet();  // => "hello"
+ *
+ * // Dates are restored properly
+ * json = necromancer.stringify(new Date());
+ * var date = necromancer.resurrect(json);
+ * Object.prototype.toString.call(date);  // => "[object Date]"
+ *
+ * ## Options
+ *
+ * Options are provided to the constructor as an object with these
+ * properties:
+ *
+ *   prefix ('#'): A prefix string used for temporary properties added
+ *     to objects during serialization and deserialization. It is
+ *     important that you don't use any properties beginning with this
+ *     string. This option must be consistent between both
+ *     serialization and deserialization.
+ *
+ *   cleanup (false): Perform full property cleanup after both
+ *     serialization and deserialization using the `delete`
+ *     operator. This may cause performance penalties (breaking hidden
+ *     classes in V8) on objects that ResurrectJS touches, so enable
+ *     with care.
+ *
+ *   revive (true): Restore behavior (__proto__) to objects that have
+ *     been resurrected. If this is set to false during serialization,
+ *     resurrection information will not be encoded. You still get
+ *     circularity and Date support.
+ *
+ *   resolver (Resurrect.NamespaceResolver(window)): Converts between
+ *     a name and a prototype. Create a custom resolver if your
+ *     constructors are not stored in global variables. The resolver
+ *     has two methods: getName(object) and getPrototype(string).
+ *
+ * For example,
+ *
+ * var necromancer = new Resurrect({
+ *     prefix: '__#',
+ *     cleanup: true
+ * });
+ *
+ * ## Caveats
+ *
+ *   * With the default resolver, all constructors must be named and
+ *   stored in the global variable under that name. This is required
+ *   so that the prototypes can be looked up and reconnected at
+ *   resurrection time.
+ *
+ *   * The wrapper objects Boolean, String, and Number will be
+ *   unwrapped. This means extra properties added to these objects
+ *   will not be preserved.
+ *
+ *   * Functions cannot ever be serialized. Resurrect will throw an
+ *   error if a function is found when traversing a data structure.
+ *
+ * @see http://nullprogram.com/blog/2013/03/28/
+ */
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+class ResurrectError extends Error {
+    constructor(message) {
+        super(message);
+        this.message = message || '';
+        this.stack = new Error().stack;
+    }
+}
+_a = ResurrectError;
+(() => {
+    _a.prototype.name = 'ResurrectError';
+})();
+class NamespaceResolver {
+    /**
+     * Resolves prototypes through the properties on an object and
+     * constructor names.
+     * @param scope
+     */
+    constructor(scope) {
+        this.scope = scope;
+    }
+    /**
+     * Gets the prototype of the given property name from an object. If
+     * not found, it throws an error.
+     * @param name
+     */
+    getPrototype(name) {
+        const constructor = this.scope[name];
+        if (constructor) {
+            return constructor.prototype;
+        }
+        else {
+            throw new Resurrect.prototype.Error('Unknown constructor: ' + name);
+        }
+    }
+    /**
+     * Get the prototype name for an object, to be fetched later with getPrototype.
+     * @param object
+     * @returns Null if the constructor is Object.\
+     */
+    getName(object) {
+        let constructor = object.constructor.name;
+        if (constructor == null) {
+            // IE
+            const funcPattern = /^\s*function\s*([A-Za-z0-9_$]*)/;
+            constructor = funcPattern.exec(object.constructor)
+                ? funcPattern.exec(object.constructor)[1]
+                : null;
+        }
+        if (constructor === '') {
+            const msg = "Can't serialize objects with anonymous constructors.";
+            throw new Resurrect.prototype.Error(msg);
+        }
+        else if (constructor === 'Object' || constructor === 'Array') {
+            return null;
+        }
+        else {
+            return constructor;
+        }
+    }
+}
+class Resurrect {
+    constructor(options = {}) {
+        this.Error = ResurrectError;
+        this.resolver = new Resurrect.NamespaceResolver(Resurrect.GLOBAL);
+        this.table = null;
+        this.prefix = '#';
+        this.cleanup = false;
+        this.revive = true;
+        for (const option in options) {
+            if (Object.prototype.hasOwnProperty.call(options, option)) {
+                // @ts-ignore
+                this[option] = options[option];
+            }
+        }
+        this.refcode = this.prefix + 'id';
+        this.origcode = this.prefix + 'original';
+        this.buildcode = this.prefix + '.';
+        this.valuecode = this.prefix + 'v';
+    }
+    /**
+     * Escape special regular expression characters in a string.
+     * @param string
+     * @returns The string escaped for exact matches.
+     * @see http://stackoverflow.com/a/6969486
+     */
+    static escapeRegExp(string) {
+        // eslint-disable-next-line no-useless-escape
+        return string.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
+    }
+    /**
+     * Create a DOM node from HTML source; behaves like a constructor.
+     * @param html
+     */
+    static Node(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.firstChild;
+    }
+    /**
+     * @param type
+     * @returns A function that tests for type.
+     */
+    static is(type) {
+        const string = '[object ' + type + ']';
+        return (object) => {
+            return Object.prototype.toString.call(object) === string;
+        };
+    }
+    static isArray(object) {
+        const checker = Resurrect.is('Array');
+        return checker(object);
+    }
+    static isAtom(object) {
+        return !Resurrect.isObject(object) && !Resurrect.isArray(object);
+    }
+    /**
+     * @param object
+     * @returns True if object is a primitive or a primitive wrapper.
+     */
+    static isPrimitive(object) {
+        return (object == null ||
+            Resurrect.isNumber(object) ||
+            Resurrect.isString(object) ||
+            Resurrect.isBoolean(object));
+    }
+    /**
+     * Create a reference (encoding) to an object.
+     * @param object
+     */
+    ref(object) {
+        const ref = {};
+        if (!object) {
+            ref[this.prefix] = -1;
+        }
+        else {
+            ref[this.prefix] = object[this.refcode];
+        }
+        return ref;
+    }
+    /**
+     * Lookup an object in the table by reference object.
+     * @param ref
+     */
+    deref(ref) {
+        if (!this.table) {
+            return undefined;
+        }
+        return this.table[ref[this.prefix]];
+    }
+    /**
+     * Put a temporary identifier on an object and store it in the table.
+     * @param object
+     * @returns The unique identifier number.
+     */
+    tag(object) {
+        var _b, _c;
+        if (this.revive) {
+            const constructor = this.resolver.getName(object);
+            if (constructor) {
+                const proto = Object.getPrototypeOf(object);
+                if (this.resolver.getPrototype(constructor) !== proto) {
+                    throw new this.Error('Constructor mismatch!');
+                }
+                else {
+                    object[this.prefix] = constructor;
+                }
+            }
+        }
+        object[this.refcode] = (_b = this.table) === null || _b === void 0 ? void 0 : _b.length;
+        (_c = this.table) === null || _c === void 0 ? void 0 : _c.push(object);
+        return object[this.refcode];
+    }
+    /**
+     * Create a builder object (encoding) for serialization.
+     * @param name The name of the constructor.
+     * @param value The value to pass to the constructor.
+     */
+    builder(name, value) {
+        const builder = {};
+        builder[this.buildcode] = name;
+        builder[this.valuecode] = value;
+        return builder;
+    }
+    /**
+     * Build a value from a deserialized builder.
+     * @param ref
+     * @see http://stackoverflow.com/a/14378462
+     * @see http://nullprogram.com/blog/2013/03/24/
+     */
+    build(ref) {
+        const type = ref[this.buildcode].split(/\./).reduce((object, name) => {
+            return object[name];
+        }, Resurrect.GLOBAL);
+        /* Brilliant hack by kybernetikos: */
+        const args = [null].concat(ref[this.valuecode]);
+        const factory = type.bind.apply(type, args);
+        const result = new factory();
+        if (Resurrect.isPrimitive(result)) {
+            if (!result) {
+                return null;
+            }
+            return result.valueOf(); // unwrap
+        }
+        else {
+            return result;
+        }
+    }
+    /**
+     * Dereference or build an object or value from an encoding.
+     * @param ref
+     */
+    decode(ref) {
+        if (this.prefix in ref) {
+            return this.deref(ref);
+        }
+        else if (this.buildcode in ref) {
+            return this.build(ref);
+        }
+        else {
+            throw new this.Error('Unknown encoding.');
+        }
+    }
+    /**
+     * @param object
+     * @returns True if the provided object is tagged for serialization.
+     */
+    isTagged(object) {
+        return this.refcode in object && object[this.refcode] != null;
+    }
+    /**
+     * Visit root and all its ancestors, visiting atoms with f.
+     * @param root
+     * @param f
+     * @param replacer
+     * @returns A fresh copy of root to be serialized.
+     */
+    visit(root, f, replacer) {
+        if (Resurrect.isAtom(root)) {
+            return f(root);
+        }
+        else if (!this.isTagged(root)) {
+            let copy = null;
+            if (Resurrect.isArray(root)) {
+                copy = [];
+                // @ts-ignore
+                root[this.refcode] = this.tag(copy);
+                for (let i = 0; i < root.length; i++) {
+                    copy.push(this.visit(root[i], f, replacer));
+                }
+            }
+            else {
+                /* Object */
+                copy = Object.create(Object.getPrototypeOf(root));
+                root[this.refcode] = this.tag(copy);
+                for (const key in root) {
+                    let value = root[key];
+                    if (Object.prototype.hasOwnProperty.call(root, key)) {
+                        if (replacer && value !== undefined) {
+                            // Call replacer like JSON.stringify's replacer
+                            value = replacer.call(root, key, root[key]);
+                            if (value === undefined) {
+                                continue; // Omit from result
+                            }
+                        }
+                        copy[key] = this.visit(value, f, replacer);
+                    }
+                }
+            }
+            copy[this.origcode] = root;
+            return this.ref(copy);
+        }
+        else {
+            return this.ref(root);
+        }
+    }
+    /**
+     * Manage special atom values, possibly returning an encoding.
+     * @param atom
+     */
+    handleAtom(atom) {
+        var _b;
+        const Node = Resurrect.GLOBAL.Node || function () { };
+        if (Resurrect.isFunction(atom)) {
+            throw new this.Error("Can't serialize functions.");
+        }
+        else if (atom instanceof Node) {
+            const xmls = new XMLSerializer();
+            return this.builder('Resurrect.Node', [xmls.serializeToString(atom)]);
+        }
+        else if (Resurrect.isDate(atom)) {
+            return this.builder('Date', [atom.toISOString()]);
+        }
+        else if (Resurrect.isRegExp(atom)) {
+            const args = (_b = atom
+                .toString()
+                .match(/\/(.+)\/([gimy]*)/)) === null || _b === void 0 ? void 0 : _b.slice(1);
+            return this.builder('RegExp', args);
+        }
+        else if (atom === undefined) {
+            return this.ref(undefined);
+        }
+        else if (Resurrect.isNumber(atom) &&
+            (isNaN(atom) || !isFinite(atom))) {
+            return this.builder('Number', [atom.toString()]);
+        }
+        else {
+            return atom;
+        }
+    }
+    /**
+     * Hides intrusive keys from a user-supplied replacer.
+     * @param replacer function of two arguments (key, value)
+     * @returns A function that skips the replacer for intrusive keys.
+     */
+    replacerWrapper(replacer) {
+        const skip = new RegExp('^' + Resurrect.escapeRegExp(this.prefix));
+        return (k, v) => {
+            if (skip.test(k)) {
+                return v;
+            }
+            else {
+                return replacer(k, v);
+            }
+        };
+    }
+    /**
+     * Serialize an arbitrary JavaScript object, carefully preserving it.
+     * @param object
+     * @param replacer
+     * @param space
+     */
+    stringify(object, replacer, space) {
+        if (Resurrect.isFunction(replacer)) {
+            replacer = this.replacerWrapper(replacer);
+        }
+        else if (Resurrect.isArray(replacer)) {
+            const acceptKeys = replacer;
+            replacer = (k, v) => {
+                return acceptKeys.indexOf(k) >= 0 ? v : undefined;
+            };
+        }
+        if (Resurrect.isAtom(object)) {
+            return JSON.stringify(this.handleAtom(object), replacer, space);
+        }
+        else {
+            this.table = [];
+            this.visit(object, this.handleAtom.bind(this), replacer);
+            for (let i = 0; i < this.table.length; i++) {
+                if (this.cleanup) {
+                    delete this.table[i][this.origcode][this.refcode];
+                }
+                else {
+                    this.table[i][this.origcode][this.refcode] = null;
+                }
+                delete this.table[i][this.refcode];
+                delete this.table[i][this.origcode];
+            }
+            const table = this.table;
+            this.table = null;
+            return JSON.stringify(table, null, space);
+        }
+    }
+    /**
+     * Restore the __proto__ of the given object to the proper value.
+     * @param object
+     * @returns Its argument, or a copy, with the prototype restored.
+     */
+    fixPrototype(object) {
+        if (this.prefix in object) {
+            const name = object[this.prefix];
+            const prototype = this.resolver.getPrototype(name);
+            if ('__proto__' in object) {
+                object.__proto__ = prototype;
+                if (this.cleanup) {
+                    delete object[this.prefix];
+                }
+                return object;
+            }
+            else {
+                // IE
+                const copy = Object.create(prototype);
+                for (const key in object) {
+                    if (Object.prototype.hasOwnProperty.call(object, key) &&
+                        key !== this.prefix) {
+                        copy[key] = object[key];
+                    }
+                }
+                return copy;
+            }
+        }
+        else {
+            return object;
+        }
+    }
+    /**
+     * Deserialize an encoded object, restoring circularity and behavior.
+     * @param string
+     * @returns The decoded object or value.
+     */
+    resurrect(string) {
+        let result = null;
+        const data = JSON.parse(string);
+        if (Resurrect.isArray(data)) {
+            this.table = data;
+            /* Restore __proto__. */
+            if (this.revive) {
+                for (let i = 0; i < this.table.length; i++) {
+                    this.table[i] = this.fixPrototype(this.table[i]);
+                }
+            }
+            /* Re-establish object references and construct atoms. */
+            for (let i = 0; i < this.table.length; i++) {
+                const object = this.table[i];
+                for (const key in object) {
+                    if (Object.prototype.hasOwnProperty.call(object, key)) {
+                        if (!Resurrect.isAtom(object[key])) {
+                            object[key] = this.decode(object[key]);
+                        }
+                    }
+                }
+            }
+            result = this.table[0];
+        }
+        else if (Resurrect.isObject(data)) {
+            this.table = [];
+            result = this.decode(data);
+        }
+        else {
+            result = data;
+        }
+        this.table = null;
+        return result;
+    }
+}
+/**
+ * Portable access to the global object (window, global).
+ * Uses indirect eval.
+ * @constant
+ */
+Resurrect.GLOBAL = (0, eval)('this');
+Resurrect.NamespaceResolver = NamespaceResolver;
+Resurrect.isString = Resurrect.is('String');
+Resurrect.isBoolean = Resurrect.is('Boolean');
+Resurrect.isNumber = Resurrect.is('Number');
+Resurrect.isFunction = Resurrect.is('Function');
+Resurrect.isDate = Resurrect.is('Date');
+Resurrect.isRegExp = Resurrect.is('RegExp');
+Resurrect.isObject = Resurrect.is('Object');
+exports["default"] = Resurrect;
 
-const Common = module.exports = {};
 
-Common.injectStyles = function(styles, id) {
-  if (document.getElementById(id)) {
-    return;
-  }
+/***/ }),
 
-  let root = document.createElement('div');
-  root.innerHTML = `<style id="${id}" type="text/css">${styles}</style>`;
+/***/ 79:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-  let lastStyle = document.head.querySelector('style:last-of-type');
+"use strict";
 
-  if (lastStyle) {
-    Common.domInsertBefore(root.firstElementChild, lastStyle);
-  } else {
-    document.head.appendChild(root.firstElementChild);
-  }
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
-
-Common.injectScript = function(url, id, callback) {
-  if (document.getElementById(id)) {
-    return;
-  }
-
-  let script = document.createElement('script');
-  script.id = id;
-  script.src = url;
-  script.onload = callback;
-
-  document.body.appendChild(script);
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-
-Common.domRemove = function(element) {
-  return element.parentElement.removeChild(element);
-};
-
-Common.domInsertBefore = function(element, before) {
-  return before.parentNode.insertBefore(element, before.previousElementSibling);
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Serializer = exports.Inspector = exports.Gui = exports.Demo = exports.Common = void 0;
+const Common_1 = __importDefault(__webpack_require__(560));
+const Demo_1 = __importDefault(__webpack_require__(80));
+const Gui_1 = __importDefault(__webpack_require__(485));
+const Inspector_1 = __importDefault(__webpack_require__(159));
+const Serializer_1 = __importDefault(__webpack_require__(954));
+exports.Common = __importStar(__webpack_require__(560));
+exports.Demo = __importStar(__webpack_require__(80));
+exports.Gui = __importStar(__webpack_require__(485));
+exports.Inspector = __importStar(__webpack_require__(159));
+exports.Serializer = __importStar(__webpack_require__(954));
+exports["default"] = {
+    Common: Common_1.default,
+    Demo: Demo_1.default,
+    Gui: Gui_1.default,
+    Inspector: Inspector_1.default,
+    Serializer: Serializer_1.default,
 };
 
 
 /***/ }),
 
-/***/ 244:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+/***/ 560:
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+class Common {
+    static injectStyles(styles, id) {
+        if (document.getElementById(id)) {
+            return;
+        }
+        const root = document.createElement('div');
+        root.innerHTML = `<style id="${id}" type="text/css">${styles}</style>`;
+        if (!root.firstElementChild) {
+            return;
+        }
+        const lastStyle = document.head.querySelector('style:last-of-type');
+        if (lastStyle) {
+            Common.domInsertBefore(root.firstElementChild, lastStyle);
+        }
+        else {
+            document.head.appendChild(root.firstElementChild);
+        }
+    }
+    static injectScript(url, id, callback) {
+        if (document.getElementById(id)) {
+            return;
+        }
+        const script = document.createElement('script');
+        script.id = id;
+        script.src = url;
+        script.onload = callback;
+        document.body.appendChild(script);
+    }
+    static domRemove(element) {
+        var _a;
+        return (_a = element.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(element);
+    }
+    static domInsertBefore(element, before) {
+        var _a;
+        return (_a = before.parentNode) === null || _a === void 0 ? void 0 : _a.insertBefore(element, before.previousElementSibling);
+    }
+}
+exports["default"] = Common;
 
+
+/***/ }),
+
+/***/ 80:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const Gui_1 = __importDefault(__webpack_require__(485));
+const Inspector_1 = __importDefault(__webpack_require__(159));
+const Common_1 = __importDefault(__webpack_require__(560));
+const MatterTypes = __importStar(__webpack_require__(381));
+const Matter = MatterTypes.default;
 /**
  * A tool for for running and testing example scenes.
  * @module Demo
  */
-
-const Demo = module.exports = {};
-
-const Gui = __webpack_require__(945);
-const Inspector = __webpack_require__(142);
-const ToolsCommon = __webpack_require__(994);
-
-const Matter = __webpack_require__(759);
-const Common = Matter.Common;
-
-Demo._isIOS = window.navigator && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-Demo._matterLink = 'https://brm.io/matter-js/';
-
-/**
- * Creates a new demo instance.
- * See example for options and usage.
- * @function Demo.create
- * @param {} options
- */
-Demo.create = function(options) {
-  let demo = Object.assign({
-    example: {
-      instance: null
-    },
-    examples: [],
-    resetOnOrientation: false,
-    preventZoom: false,
-    fullPage: false,
-    startExample: true,
-    appendTo: document.body,
-    toolbar: {
-      title: null,
-      url: null,
-      reset: true,
-      source: false,
-      inspector: false,
-      tools: false,
-      fullscreen: true,
-      exampleSelect: false
-    },
-    tools: {
-      inspector: null,
-      gui: null
-    },
-    dom: {}
-  }, options || {});
-
-  if (!options.toolbar 
-    || (demo.examples.length > 1 && options.toolbar && options.toolbar.exampleSelect !== false)) {
-    demo.toolbar.exampleSelect = true;
-  }
-
-  if (Demo._isIOS) {
-    demo.toolbar.fullscreen = false;
-  }
-
-  if (!Gui) {
-    demo.toolbar.tools = false;
-    demo.tools.gui = false;
-  }
-
-  if (!Inspector) {
-    demo.toolbar.inspector = false;
-    demo.tools.inspector = false;
-  }
-
-  demo.dom = Demo._createDom(demo);
-  Demo._bindDom(demo);
-
-  if (!demo.fullPage && demo.inline !== false) {
-    demo.dom.root.classList.add('matter-demo-inline');
-  }
-
-  if (demo.appendTo) {
-    demo.appendTo.appendChild(demo.dom.root);
-  }
-
-  if (demo.startExample) {
-    Demo.start(demo, demo.startExample);
-  }
-
-  return demo;
-};
-
-/**
- * Starts a new demo instance by running the first or given example.
- * See example for options and usage.
- * @function Demo.start
- * @param {demo} demo
- * @param {string} [initalExampleId] example to start (defaults to first)
- */
-Demo.start = function(demo, initalExampleId) {
-  initalExampleId = typeof initalExampleId === 'string' ? initalExampleId : demo.examples[0].id;
-
-  if (window.location.hash.length > 0) {
-    initalExampleId = window.location.hash.slice(1);
-  }
-
-  Demo.setExampleById(demo, initalExampleId);
-};
-
-/**
- * Stops the currently running example in the demo.
- * This requires that the `example.init` function returned 
- * an object specifiying a `stop` function.
- * @function Demo.stop
- * @param {demo} demo
- */
-Demo.stop = function(demo) {
-  if (demo.example && demo.example.instance) {
-    demo.example.instance.stop();
-  }
-};
-
-/**
- * Stops and restarts the currently running example.
- * @function Demo.reset
- * @param {demo} demo
- */
-Demo.reset = function(demo) {
-  Common._nextId = 0;
-  Common._seed = 0;
-
-  Demo.setExample(demo, demo.example);
-};
-
-/**
- * Starts the given example by its id. 
- * Any running example will be stopped.
- * @function Demo.setExampleById
- * @param {demo} demo
- * @param {string} exampleId 
- */
-Demo.setExampleById = function(demo, exampleId) {
-  let example = demo.examples.filter((example) => {
-    return example.id === exampleId;
-  })[0];
-
-  Demo.setExample(demo, example);
-};
-
-/**
- * Starts the given example.
- * Any running example will be stopped.
- * @function Demo.setExample
- * @param {demo} demo
- * @param {example} example 
- */
-Demo.setExample = function(demo, example) {
-  if (example) {
-    let instance = demo.example.instance;
-
-    if (instance) {
-      instance.stop();
-
-      if (instance.canvas) {
-        instance.canvas.parentElement.removeChild(instance.canvas);
-      }
+class Demo {
+    /**
+     * Creates a new demo instance.
+     * See example for options and usage.
+     * @function create
+     * @param options
+     */
+    static create(options) {
+        var _a;
+        const demo = Object.assign({
+            example: {
+                instance: null,
+            },
+            examples: [],
+            resetOnOrientation: false,
+            preventZoom: false,
+            fullPage: false,
+            startExample: true,
+            appendTo: document.body,
+            toolbar: {
+                title: null,
+                url: null,
+                reset: true,
+                source: false,
+                inspector: false,
+                tools: false,
+                fullscreen: true,
+                exampleSelect: false,
+            },
+            tools: {
+                inspector: null,
+                gui: null,
+            },
+            dom: {},
+        }, options || {});
+        if (!options.toolbar ||
+            (demo.examples.length > 1 &&
+                options.toolbar &&
+                options.toolbar.exampleSelect !== false)) {
+            demo.toolbar.exampleSelect = true;
+        }
+        if (Demo._isIOS) {
+            demo.toolbar.fullscreen = false;
+        }
+        if (!Gui_1.default) {
+            demo.toolbar.tools = false;
+            demo.tools.gui = false;
+        }
+        if (!Inspector_1.default) {
+            demo.toolbar.inspector = false;
+            demo.tools.inspector = false;
+        }
+        demo.dom = Demo._createDom(demo);
+        Demo._bindDom(demo);
+        if (!demo.fullPage && demo.inline !== false) {
+            (_a = demo.dom.root) === null || _a === void 0 ? void 0 : _a.classList.add('matter-demo-inline');
+        }
+        if (demo.appendTo && demo.dom.root) {
+            demo.appendTo.appendChild(demo.dom.root);
+        }
+        if (demo.startExample) {
+            Demo.start(demo);
+        }
+        return demo;
     }
-
-    window.location.hash = example.id;
-
-    demo.example.instance = null;
-    demo.example = example;
-
-    demo.example.instance = instance = example.init(demo);
-
-    if (!instance.canvas && instance.render) {
-      instance.canvas = instance.render.canvas;
+    /**
+     * Starts a new demo instance by running the first or given example.
+     * See example for options and usage.
+     * @function start
+     * @param demo
+     * @param initalExampleId example to start (defaults to first)
+     */
+    static start(demo, initialExampleId = demo.examples[0].id) {
+        if (window.location.hash.length > 0) {
+            initialExampleId = window.location.hash.slice(1);
+        }
+        Demo.setExampleById(demo, initialExampleId);
     }
-
-    if (instance.canvas) {
-      demo.dom.root.appendChild(instance.canvas);
+    /**
+     * Stops the currently running example in the demo.
+     * This requires that the `example.init` function returned
+     * an object specifiying a `stop` function.
+     * @function stop
+     * @param demo
+     */
+    static stop(demo) {
+        if (demo.example && demo.example.instance) {
+            demo.example.instance.stop();
+        }
     }
-
-    demo.dom.exampleSelect.value = example.id;
-    demo.dom.buttonSource.href = example.sourceLink || demo.url || '#';
-
-    setTimeout(function() {
-      if (demo.tools.inspector) {
-        Demo.setInspector(demo, true);
-      }
-
-      if (demo.tools.gui) {
-        Demo.setGui(demo, true);
-      }
-    }, 500);
-  } else {
-    Demo.setExample(demo, demo.examples[0]);
-  }
-};
-
-/**
- * Enables or disables the inspector tool.
- * If `enabled` a new `Inspector` instance will be created and the old one destroyed.
- * @function Demo.setInspector
- * @param {demo} demo
- * @param {bool} enabled
- */
-Demo.setInspector = function(demo, enabled) {
-  if (!enabled) {
-    Demo._destroyTools(demo, true, false);
-    demo.dom.root.classList.toggle('matter-inspect-active', false);
-    return;
-  }
-
-  let instance = demo.example.instance;
-
-  Demo._destroyTools(demo, true, false);
-  demo.dom.root.classList.toggle('matter-inspect-active', true);
-
-  demo.tools.inspector = Inspector.create(
-    instance.engine,
-    instance.render
-  );
-};
-
-/**
- * Enables or disables the Gui tool.
- * If `enabled` a new `Gui` instance will be created and the old one destroyed.
- * @function Demo.setGui
- * @param {demo} demo
- * @param {bool} enabled
- */
-Demo.setGui = function(demo, enabled) {
-  if (!enabled) {
-    Demo._destroyTools(demo, false, true);
-    demo.dom.root.classList.toggle('matter-gui-active', false);
-    return;
-  }
-
-  let instance = demo.example.instance;
-
-  Demo._destroyTools(demo, false, true);
-  demo.dom.root.classList.toggle('matter-gui-active', true);
-
-  demo.tools.gui = Gui.create(
-    instance.engine, 
-    instance.runner, 
-    instance.render
-  );
-};
-
-Demo._destroyTools = function(demo, destroyInspector, destroyGui) {
-  let inspector = demo.tools.inspector,
-    gui = demo.tools.gui;
-
-  if (destroyInspector && inspector && inspector !== true) {
-    Inspector.destroy(inspector);
-    demo.tools.inspector = null;
-  }
-
-  if (destroyGui && gui && gui !== true) {
-    Gui.destroy(gui);
-    demo.tools.gui = null;
-  }
-};
-
-Demo._toggleFullscreen = function(demo) {
-  let fullscreenElement = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
-
-  if (!fullscreenElement) {
-    fullscreenElement = demo.dom.root;
-
-    if (fullscreenElement.requestFullscreen) {
-      fullscreenElement.requestFullscreen();
-    } else if (fullscreenElement.mozRequestFullScreen) {
-      fullscreenElement.mozRequestFullScreen();
-    } else if (fullscreenElement.webkitRequestFullscreen) {
-      fullscreenElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    /**
+     * Stops and restarts the currently running example.
+     * @function reset
+     * @param demo
+     */
+    static reset(demo) {
+        // @ts-ignore
+        Matter.Common._nextId = 0;
+        // @ts-ignore
+        Matter.Common._seed = 0;
+        Demo.setExample(demo, demo.example);
     }
-  } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen(); 
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen(); 
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen(); 
+    /**
+     * Starts the given example by its id.
+     * Any running example will be stopped.
+     * @function setExampleById
+     * @param demo
+     * @param exampleId
+     */
+    static setExampleById(demo, exampleId) {
+        const example = demo.examples.filter((example) => {
+            return example.id === exampleId;
+        })[0];
+        Demo.setExample(demo, example);
     }
-  }
-};
-
-Demo._bindDom = function(demo) {
-  var dom = demo.dom;
-
-  window.addEventListener('orientationchange', function() {
-    setTimeout(() => {
-      if (demo.resetOnOrientation) {
-        Demo.reset(demo);
-      }
-    }, 300);
-  });
-
-  if (demo.preventZoom) {
-    document.body.addEventListener('gesturestart', function(event) { 
-      event.preventDefault(); 
-    });
-
-    var allowTap = true,
-      tapTimeout;
-
-    document.body.addEventListener('touchstart', function(event) {
-      if (!allowTap) {
-        event.preventDefault();
-      }
-
-      allowTap = false;
-
-      clearTimeout(tapTimeout);
-      tapTimeout = setTimeout(function() {
-        allowTap = true;
-      }, 500);
-    });
-  }
-
-  if (dom.exampleSelect) {
-    dom.exampleSelect.addEventListener('change', function() {
-      let exampleId = this.options[this.selectedIndex].value;
-      Demo.setExampleById(demo, exampleId);
-    });
-  }
-
-  if (dom.buttonReset) {
-    dom.buttonReset.addEventListener('click', function() {
-      Demo.reset(demo);
-    });
-  }
-
-  if (dom.buttonInspect) {
-    dom.buttonInspect.addEventListener('click', function() {
-      var showInspector = !demo.tools.inspector;
-      Demo.setInspector(demo, showInspector);
-    });
-  }
-
-  if (dom.buttonTools) {
-    dom.buttonTools.addEventListener('click', function() {
-      var showGui = !demo.tools.gui;
-      Demo.setGui(demo, showGui);
-    });
-  }
-
-  if (dom.buttonFullscreen) {
-    dom.buttonFullscreen.addEventListener('click', function() {
-      Demo._toggleFullscreen(demo);
-    });
-
-    var fullscreenChange = function() {
-      var isFullscreen = document.fullscreen || document.webkitIsFullScreen || document.mozFullScreen;
-      document.body.classList.toggle('matter-is-fullscreen', isFullscreen);
-    };
-
-    document.addEventListener('webkitfullscreenchange', fullscreenChange);
-    document.addEventListener('mozfullscreenchange', fullscreenChange);
-    document.addEventListener('fullscreenchange', fullscreenChange);
-  }
-};
-
-Demo._createDom = function(options) {
-  let styles = __webpack_require__(929);
-  ToolsCommon.injectStyles(styles, 'matter-demo-style');
-
-  let root = document.createElement('div');
-
-  let exampleOptions = options.examples.map((example) => {
-    return `<option value="${example.id}">${example.name}</option>`;
-  }).join(' ');
-
-  var preventZoomClass = options.preventZoom && Demo._isIOS ? 'prevent-zoom-ios' : '';
-
-  root.innerHTML = `
+    /**
+     * Starts the given example.
+     * Any running example will be stopped.
+     * @function setExample
+     * @param demo
+     * @param example
+     */
+    static setExample(demo, example) {
+        var _a;
+        if (example) {
+            let instance = demo.example.instance;
+            if (instance) {
+                instance.stop();
+                if (instance.canvas) {
+                    instance.canvas.parentElement.removeChild(instance.canvas);
+                }
+            }
+            window.location.hash = example.id;
+            demo.example.instance = null;
+            // @ts-ignore
+            demo.example = example;
+            demo.example.instance = instance = example.init(demo);
+            if (!instance.canvas && instance.render) {
+                instance.canvas = instance.render.canvas;
+            }
+            if (instance.canvas) {
+                (_a = demo.dom.root) === null || _a === void 0 ? void 0 : _a.appendChild(instance.canvas);
+            }
+            if (demo.dom.exampleSelect) {
+                demo.dom.exampleSelect.value = example.id;
+            }
+            if (demo.dom.buttonSource) {
+                demo.dom.buttonSource.href = example.sourceLink || demo.url || '#';
+            }
+            setTimeout(function () {
+                if (demo.tools.inspector) {
+                    Demo.setInspector(demo, true);
+                }
+                if (demo.tools.gui) {
+                    Demo.setGui(demo, true);
+                }
+            }, 500);
+        }
+        else {
+            Demo.setExample(demo, demo.examples[0]);
+        }
+    }
+    /**
+     * Enables or disables the inspector tool.
+     * If `enabled` a new `Inspector` instance will be created and the old one destroyed.
+     * @function setInspector
+     * @param demo
+     * @param enabled
+     */
+    static setInspector(demo, enabled) {
+        var _a, _b;
+        if (!enabled) {
+            Demo._destroyTools(demo, true, false);
+            (_a = demo.dom.root) === null || _a === void 0 ? void 0 : _a.classList.toggle('matter-inspect-active', false);
+            return;
+        }
+        const instance = demo.example.instance;
+        Demo._destroyTools(demo, true, false);
+        (_b = demo.dom.root) === null || _b === void 0 ? void 0 : _b.classList.toggle('matter-inspect-active', true);
+        demo.tools.inspector = Inspector_1.default.create(instance.engine, instance.render);
+    }
+    /**
+     * Enables or disables the Gui tool.
+     * If `enabled` a new `Gui` instance will be created and the old one destroyed.
+     * @function setGui
+     * @param demo
+     * @param enabled
+     */
+    static setGui(demo, enabled) {
+        var _a, _b;
+        if (!enabled) {
+            Demo._destroyTools(demo, false, true);
+            (_a = demo.dom.root) === null || _a === void 0 ? void 0 : _a.classList.toggle('matter-gui-active', false);
+            return;
+        }
+        const instance = demo.example.instance;
+        Demo._destroyTools(demo, false, true);
+        (_b = demo.dom.root) === null || _b === void 0 ? void 0 : _b.classList.toggle('matter-gui-active', true);
+        demo.tools.gui = Gui_1.default.create(instance.engine, instance.runner, instance.render);
+    }
+    static _destroyTools(demo, destroyInspector, destroyGui) {
+        const inspector = demo.tools.inspector;
+        const gui = demo.tools.gui;
+        // @ts-ignore
+        if (destroyInspector && inspector && inspector !== true) {
+            Inspector_1.default.destroy(inspector);
+            demo.tools.inspector = null;
+        }
+        // @ts-ignore
+        if (destroyGui && gui && gui !== true) {
+            Gui_1.default.destroy(gui);
+            demo.tools.gui = null;
+        }
+    }
+    static _toggleFullscreen(demo) {
+        let fullscreenElement = document.fullscreenElement ||
+            // @ts-ignore
+            document.mozFullScreenElement ||
+            // @ts-ignore
+            document.webkitFullscreenElement;
+        if (!fullscreenElement) {
+            fullscreenElement = demo.dom.root;
+            if (fullscreenElement.requestFullscreen) {
+                fullscreenElement.requestFullscreen();
+            }
+            else if (fullscreenElement.mozRequestFullScreen) {
+                fullscreenElement.mozRequestFullScreen();
+            }
+            else if (fullscreenElement.webkitRequestFullscreen) {
+                // @ts-ignore
+                fullscreenElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            }
+        }
+        else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            else if ('mozCancelFullScreen' in document) {
+                // @ts-ignore
+                document.mozCancelFullScreen();
+            }
+            else if ('webkitExitFullscreen' in document) {
+                // @ts-ignore
+                document.webkitExitFullscreen();
+            }
+        }
+    }
+    static _bindDom(demo) {
+        const dom = demo.dom;
+        window.addEventListener('orientationchange', function () {
+            setTimeout(() => {
+                if (demo.resetOnOrientation) {
+                    Demo.reset(demo);
+                }
+            }, 300);
+        });
+        if (demo.preventZoom) {
+            document.body.addEventListener('gesturestart', function (event) {
+                event.preventDefault();
+            });
+            let allowTap = true;
+            let tapTimeout;
+            document.body.addEventListener('touchstart', function (event) {
+                if (!allowTap) {
+                    event.preventDefault();
+                }
+                allowTap = false;
+                clearTimeout(tapTimeout);
+                tapTimeout = setTimeout(function () {
+                    allowTap = true;
+                }, 500);
+            });
+        }
+        if (dom.exampleSelect) {
+            dom.exampleSelect.addEventListener('change', function () {
+                const exampleId = this.options[this.selectedIndex].value;
+                Demo.setExampleById(demo, exampleId);
+            });
+        }
+        if (dom.buttonReset) {
+            dom.buttonReset.addEventListener('click', function () {
+                Demo.reset(demo);
+            });
+        }
+        if (dom.buttonInspect) {
+            dom.buttonInspect.addEventListener('click', function () {
+                const showInspector = !demo.tools.inspector;
+                Demo.setInspector(demo, showInspector);
+            });
+        }
+        if (dom.buttonTools) {
+            dom.buttonTools.addEventListener('click', function () {
+                const showGui = !demo.tools.gui;
+                Demo.setGui(demo, showGui);
+            });
+        }
+        if (dom.buttonFullscreen) {
+            dom.buttonFullscreen.addEventListener('click', function () {
+                Demo._toggleFullscreen(demo);
+            });
+            const fullscreenChange = function () {
+                const isFullscreen = document.fullscreen ||
+                    // @ts-ignore
+                    document.webkitIsFullScreen ||
+                    // @ts-ignore
+                    document.mozFullScreen;
+                document.body.classList.toggle('matter-is-fullscreen', isFullscreen);
+            };
+            document.addEventListener('webkitfullscreenchange', fullscreenChange);
+            document.addEventListener('mozfullscreenchange', fullscreenChange);
+            document.addEventListener('fullscreenchange', fullscreenChange);
+        }
+    }
+    static _createDom(options) {
+        var _a;
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const styles = __webpack_require__(929);
+        Common_1.default.injectStyles(styles, 'matter-demo-style');
+        const root = document.createElement('div');
+        const exampleOptions = options.examples
+            .map((example) => {
+            return `<option value="${example.id}">${example.name}</option>`;
+        })
+            .join(' ');
+        const preventZoomClass = options.preventZoom && Demo._isIOS ? 'prevent-zoom-ios' : '';
+        root.innerHTML = `
     <div class="matter-demo ${options.toolbar.title} ${preventZoomClass}">
       <div class="matter-header-outer">
         <header class="matter-header">
@@ -1470,1704 +1488,1480 @@ Demo._createDom = function(options) {
       </div>
     </div>
   `;
+        const dom = {
+            root: root.firstElementChild,
+            title: root.querySelector('.matter-demo-title'),
+            header: root.querySelector('.matter-header'),
+            exampleSelect: root.querySelector('.matter-example-select'),
+            buttonReset: root.querySelector('.matter-btn-reset'),
+            buttonSource: root.querySelector('.matter-btn-source'),
+            buttonTools: root.querySelector('.matter-btn-tools'),
+            buttonInspect: root.querySelector('.matter-btn-inspect'),
+            buttonFullscreen: root.querySelector('.matter-btn-fullscreen'),
+        };
+        if (!options.toolbar.title && dom.title) {
+            Common_1.default.domRemove(dom.title);
+        }
+        if (!options.toolbar.exampleSelect && ((_a = dom.exampleSelect) === null || _a === void 0 ? void 0 : _a.parentElement)) {
+            Common_1.default.domRemove(dom.exampleSelect.parentElement);
+        }
+        if (!options.toolbar.reset && dom.buttonReset) {
+            Common_1.default.domRemove(dom.buttonReset);
+        }
+        if (!options.toolbar.source && dom.buttonSource) {
+            Common_1.default.domRemove(dom.buttonSource);
+        }
+        if (!options.toolbar.inspector && dom.buttonInspect) {
+            Common_1.default.domRemove(dom.buttonInspect);
+        }
+        if (!options.toolbar.tools && dom.buttonTools) {
+            Common_1.default.domRemove(dom.buttonTools);
+        }
+        if (!options.toolbar.fullscreen && dom.buttonFullscreen) {
+            Common_1.default.domRemove(dom.buttonFullscreen);
+        }
+        return dom;
+    }
+}
+Demo._isIOS = window.navigator &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+    // @ts-ignore
+    !window.MSStream;
+Demo._matterLink = 'https://brm.io/matter-js/';
+exports["default"] = Demo;
 
-  let dom = {
-    root: root.firstElementChild,
-    title: root.querySelector('.matter-demo-title'),
-    header: root.querySelector('.matter-header'),
-    exampleSelect: root.querySelector('.matter-example-select'),
-    buttonReset: root.querySelector('.matter-btn-reset'),
-    buttonSource: root.querySelector('.matter-btn-source'),
-    buttonTools: root.querySelector('.matter-btn-tools'),
-    buttonInspect: root.querySelector('.matter-btn-inspect'),
-    buttonFullscreen: root.querySelector('.matter-btn-fullscreen')
-  };
-
-  if (!options.toolbar.title) {
-    ToolsCommon.domRemove(dom.title);
-  }
-
-  if (!options.toolbar.exampleSelect) {
-    ToolsCommon.domRemove(dom.exampleSelect.parentElement);
-  }
-
-  if (!options.toolbar.reset) {
-    ToolsCommon.domRemove(dom.buttonReset);
-  }
-
-  if (!options.toolbar.source) {
-    ToolsCommon.domRemove(dom.buttonSource);
-  }
-
-  if (!options.toolbar.inspector) {
-    ToolsCommon.domRemove(dom.buttonInspect);
-  }
-
-  if (!options.toolbar.tools) {
-    ToolsCommon.domRemove(dom.buttonTools);
-  }
-
-  if (!options.toolbar.fullscreen) {
-    ToolsCommon.domRemove(dom.buttonFullscreen);
-  }
-
-  return dom;
-};
 
 /***/ }),
 
-/***/ 945:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+/***/ 485:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const dat_gui_1 = __importDefault(__webpack_require__(13));
+const Common_1 = __importDefault(__webpack_require__(560));
+const Serializer_1 = __importDefault(__webpack_require__(954));
+const MatterTypes = __importStar(__webpack_require__(381));
+const Matter = MatterTypes.default;
 /**
  * A tool for modifying the properties of an engine and renderer.
  * @module Gui
  */
-
-const Gui = module.exports = {};
-
-const dat = __webpack_require__(13);
-const ToolsCommon = __webpack_require__(994);
-const Serializer = __webpack_require__(367);
-
-const Matter = __webpack_require__(759);
-const Engine = Matter.Engine;
-const Detector = Matter.Detector;
-const Grid = Matter.Grid;
-const World = Matter.World;
-const Bodies = Matter.Bodies;
-const Events = Matter.Events;
-const Composite = Matter.Composite;
-
-/**
- * Creates a Gui
- * @function Gui.create
- * @param {engine} [engine]
- * @param {runner} [runner]
- * @param {render} [render]
- * @return {gui} The created gui instance
- */
-Gui.create = function(engine, runner, render) {
-  dat.GUI.TEXT_CLOSED = '▲';
-  dat.GUI.TEXT_OPEN = '▼';
-
-  var datGui = new dat.GUI({ autoPlace: false });
-
-  var gui = {
-    engine: engine,
-    runner: runner,
-    render: render,
-    datGui: datGui,
-    broadphase: 'grid',
-    broadphaseCache: {
-      grid: (engine.broadphase.controller === Grid) ? engine.broadphase : Grid.create(),
-      bruteForce: {
-        detector: Detector.bruteForce
-      }
-    },
-    amount: 1,
-    size: 40,
-    sides: 4,
-    density: 0.001,
-    restitution: 0,
-    friction: 0.1,
-    frictionStatic: 0.5,
-    frictionAir: 0.01,
-    offset: { x: 0, y: 0 },
-    renderer: 'canvas',
-    chamfer: 0,
-    isRecording: false
-  };
-  
-  if (Serializer) {
-    gui.serializer = Serializer.create();
-  }
-
-  let styles = __webpack_require__(404);
-  ToolsCommon.injectStyles(styles, 'matter-gui-style');
-
-  _initDatGui(gui);
-
-  return gui;
-};
-
-/**
- * Updates the Gui
- * @function Gui.update
- * @param {gui} gui
- */
-Gui.update = function(gui) {
-  var i;
-  var datGui = gui.datGui;
-  
-  for (i in datGui.__folders) {
-    Gui.update(gui, datGui.__folders[i]);
-  }
-  
-  for (i in datGui.__controllers) {
-    var controller = datGui.__controllers[i];
-    if (controller.updateDisplay)
-      controller.updateDisplay();
-  }
-};
-
-/**
- * Closes all sections of the Gui
- * @function Gui.closeAll
- * @param {gui} gui
- */
-Gui.closeAll = function(gui) {
-  var datGui = gui.datGui;
-  
-  for (var i in datGui.__folders) {
-    datGui.__folders[i].close();
-  }
-};
-
-/**
- * Destroys the GUI
- * @function Gui.destroy
- * @param {gui} gui
- */
-Gui.destroy = function(gui) {
-  gui.datGui.domElement.parentElement.removeChild(gui.datGui.domElement);
-  gui.datGui.destroy();
-};
-
-var _initDatGui = function(gui) {
-  var engine = gui.engine,
-    runner = gui.runner,
-    datGui = gui.datGui;
-
-  var funcs = {
-    addBody: function() { _addBody(gui); },
-    clear: function() { _clear(gui); },
-    save: function() { Serializer.saveState(gui.serializer, engine, 'guiState'); Events.trigger(gui, 'save'); },
-    load: function() { Serializer.loadState(gui.serializer, engine, 'guiState'); Events.trigger(gui, 'load'); }
-  };
-
-  var metrics = datGui.addFolder('Metrics');
-
-  if (runner) {
-    metrics.add(runner, 'fps').listen();
-  }
-
-  if (engine.metrics.extended) {
-    if (runner) {
-      metrics.add(runner, 'delta').listen();
-      metrics.add(runner, 'correction').listen();
+class Gui {
+    /**
+     * Creates a Gui
+     * @function create
+     * @param engine
+     * @param runner
+     * @param render
+     * @return The created gui instance
+     */
+    static create(engine, runner, render) {
+        dat_gui_1.default.GUI.TEXT_CLOSED = '▲';
+        dat_gui_1.default.GUI.TEXT_OPEN = '▼';
+        const datGui = new dat_gui_1.default.GUI({ autoPlace: false });
+        const gui = {
+            engine: engine,
+            runner: runner,
+            render: render,
+            datGui: datGui,
+            broadphase: 'grid',
+            broadphaseCache: {
+                grid: engine.broadphase ? engine.broadphase : Matter.Grid.create(),
+                bruteForce: {
+                    detector: Matter.Detector.bruteForce,
+                },
+            },
+            amount: 1,
+            size: 40,
+            sides: 4,
+            density: 0.001,
+            restitution: 0,
+            friction: 0.1,
+            frictionStatic: 0.5,
+            frictionAir: 0.01,
+            offset: { x: 0, y: 0 },
+            renderer: 'canvas',
+            chamfer: 0,
+            isRecording: false,
+            serializer: Serializer_1.default.create(),
+            events: {},
+        };
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const styles = __webpack_require__(404);
+        Common_1.default.injectStyles(styles, 'matter-gui-style');
+        Gui._initDatGui(gui);
+        return gui;
     }
-
-    if (engine) {
-      metrics.add(engine.metrics, 'bodies').listen();
-      metrics.add(engine.metrics, 'collisions').listen();
-      metrics.add(engine.metrics, 'pairs').listen();
-      metrics.add(engine.metrics, 'broadEff').listen();
-      metrics.add(engine.metrics, 'midEff').listen();
-      metrics.add(engine.metrics, 'narrowEff').listen();
-      metrics.add(engine.metrics, 'narrowReuse').listen();
-    }
-    
-    metrics.open();
-  }
-
-  if (engine) {
-    var controls = datGui.addFolder('Add Body');
-    controls.add(gui, 'amount', 1, 5).step(1);
-    controls.add(gui, 'size', 5, 150).step(1);
-    controls.add(gui, 'sides', 1, 8).step(1);
-    controls.add(gui, 'density', 0.0001, 0.01).step(0.001);
-    controls.add(gui, 'friction', 0, 1).step(0.05);
-    controls.add(gui, 'frictionStatic', 0, 10).step(0.1);
-    controls.add(gui, 'frictionAir', 0, gui.frictionAir * 10).step(gui.frictionAir / 10);
-    controls.add(gui, 'restitution', 0, 1).step(0.1);
-    controls.add(gui, 'chamfer', 0, 30).step(2);
-    controls.add(funcs, 'addBody');
-    controls.open();
-
-    var worldGui = datGui.addFolder('World');
-
-    if (gui.serializer) {
-      worldGui.add(funcs, 'load');
-      worldGui.add(funcs, 'save');
-    }
-
-    worldGui.add(funcs, 'clear');
-    worldGui.open();
-    
-    var gravity = datGui.addFolder('Gravity');
-    gravity.add(engine.world.gravity, 'scale', 0, 0.001).step(0.0001);
-    gravity.add(engine.world.gravity, 'x', -1, 1).step(0.01);
-    gravity.add(engine.world.gravity, 'y', -1, 1).step(0.01);
-
-    var physics = datGui.addFolder('Engine');
-    physics.add(engine, 'enableSleeping');
-
-    physics.add(engine.timing, 'timeScale', 0, 1.2).step(0.05).listen();
-    physics.add(engine, 'velocityIterations', 1, 10).step(1);
-    physics.add(engine, 'positionIterations', 1, 10).step(1);
-    physics.add(engine, 'constraintIterations', 1, 10).step(1);
-
-    if (runner) {
-      physics.add(runner, 'enabled');
-    }
-  }
-
-  if (gui.render) {
-    var render = datGui.addFolder('Render');
-
-    render
-      .add(gui.render.options, 'wireframes')
-      .onFinishChange(function(value) {
-        if (!value) {
-          angleIndicatorWidget.setValue(false);
-          axesWidget.setValue(false);
+    /**
+     * Updates the Gui
+     * @function update
+     * @param gui
+     */
+    static update(gui, _) {
+        const datGui = gui.datGui;
+        for (const i in datGui.__folders) {
+            Gui.update(gui, datGui.__folders[i]);
         }
-      });
-
-    render.add(gui.render.options, 'showDebug');
-    render.add(gui.render.options, 'showPositions');
-    render.add(gui.render.options, 'showBroadphase');
-    render.add(gui.render.options, 'showBounds');
-    render.add(gui.render.options, 'showVelocity');
-    render.add(gui.render.options, 'showCollisions');
-    render.add(gui.render.options, 'showSeparations');
-    var axesWidget = render.add(gui.render.options, 'showAxes');
-    var angleIndicatorWidget = render.add(gui.render.options, 'showAngleIndicator');
-    render.add(gui.render.options, 'showSleeping');
-    render.add(gui.render.options, 'showIds');
-    render.add(gui.render.options, 'showVertexNumbers');
-    render.add(gui.render.options, 'showConvexHulls');
-    render.add(gui.render.options, 'showInternalEdges');
-    render.add(gui.render.options, 'enabled');
-    render.open();
-  }
-
-  document.body.appendChild(gui.datGui.domElement);
-};
-
-var _addBody = function(gui) {
-  var engine = gui.engine;
-
-  var options = { 
-    density: gui.density,
-    friction: gui.friction,
-    frictionStatic: gui.frictionStatic,
-    frictionAir: gui.frictionAir,
-    restitution: gui.restitution
-  };
-
-  if (gui.chamfer && gui.sides > 2) {
-    options.chamfer = {
-      radius: gui.chamfer
-    };
-  }
-
-  for (var i = 0; i < gui.amount; i++) {
-    World.add(engine.world, Bodies.polygon(gui.offset.x + 120 + i * gui.size + i * 50, gui.offset.y + 200, gui.sides, gui.size, options));
-  }
-};
-
-var _clear = function(gui) {
-  var engine = gui.engine,
-    constraints = Composite.allConstraints(engine.world),
-    mouseConstraint = null;
-
-  // find mouse constraints
-  for (var i = 0; i < constraints.length; i += 1) {
-    var constraint = constraints[i];
-
-    // TODO: need a better way than this
-    if (constraint.label === 'Mouse Constraint') {
-      mouseConstraint = constraint;
-      break;
+        for (const i in datGui.__controllers) {
+            const controller = datGui.__controllers[i];
+            if (controller.updateDisplay) {
+                controller.updateDisplay();
+            }
+        }
     }
-  }
-  
-  World.clear(engine.world, true);
-  Engine.clear(engine);
+    /**
+     * Closes all sections of the Gui
+     * @function closeAll
+     * @param gui
+     */
+    static closeAll(gui) {
+        const datGui = gui.datGui;
+        for (const i in datGui.__folders) {
+            datGui.__folders[i].close();
+        }
+    }
+    /**
+     * Destroys the GUI
+     * @function destroy
+     * @param gui
+     */
+    static destroy(gui) {
+        var _a;
+        (_a = gui.datGui.domElement.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(gui.datGui.domElement);
+        gui.datGui.destroy();
+    }
+    static _initDatGui(gui) {
+        const engine = gui.engine;
+        const runner = gui.runner;
+        const datGui = gui.datGui;
+        const funcs = {
+            addBody: function () {
+                Gui._addBody(gui);
+            },
+            clear: function () {
+                Gui._clear(gui);
+            },
+            save: function () {
+                Serializer_1.default.saveState(gui.serializer, engine, 'guiState');
+                Matter.Events.trigger(gui, 'save');
+            },
+            load: function () {
+                Serializer_1.default.loadState(gui.serializer, engine, 'guiState');
+                Matter.Events.trigger(gui, 'load');
+            },
+        };
+        const metrics = datGui.addFolder('Metrics');
+        if (runner) {
+            metrics.add(runner, 'fps').listen();
+        }
+        if (engine.metrics.extended) {
+            if (runner) {
+                metrics.add(runner, 'delta').listen();
+                // @ts-ignore
+                metrics.add(runner, 'correction').listen();
+            }
+            if (engine) {
+                metrics.add(engine.metrics, 'bodies').listen();
+                metrics.add(engine.metrics, 'collisions').listen();
+                metrics.add(engine.metrics, 'pairs').listen();
+                metrics.add(engine.metrics, 'broadEff').listen();
+                metrics.add(engine.metrics, 'midEff').listen();
+                metrics.add(engine.metrics, 'narrowEff').listen();
+                metrics.add(engine.metrics, 'narrowReuse').listen();
+            }
+            metrics.open();
+        }
+        if (engine) {
+            const controls = datGui.addFolder('Add Body');
+            controls.add(gui, 'amount', 1, 5).step(1);
+            controls.add(gui, 'size', 5, 150).step(1);
+            controls.add(gui, 'sides', 1, 8).step(1);
+            controls.add(gui, 'density', 0.0001, 0.01).step(0.001);
+            controls.add(gui, 'friction', 0, 1).step(0.05);
+            controls.add(gui, 'frictionStatic', 0, 10).step(0.1);
+            controls
+                .add(gui, 'frictionAir', 0, gui.frictionAir * 10)
+                .step(gui.frictionAir / 10);
+            controls.add(gui, 'restitution', 0, 1).step(0.1);
+            controls.add(gui, 'chamfer', 0, 30).step(2);
+            controls.add(funcs, 'addBody');
+            controls.open();
+            const worldGui = datGui.addFolder('World');
+            if (gui.serializer) {
+                worldGui.add(funcs, 'load');
+                worldGui.add(funcs, 'save');
+            }
+            worldGui.add(funcs, 'clear');
+            worldGui.open();
+            if (engine.world.gravity) {
+                const gravity = datGui.addFolder('Gravity');
+                gravity.add(engine.world.gravity, 'scale', 0, 0.001).step(0.0001);
+                gravity.add(engine.world.gravity, 'x', -1, 1).step(0.01);
+                gravity.add(engine.world.gravity, 'y', -1, 1).step(0.01);
+            }
+            const physics = datGui.addFolder('Engine');
+            physics.add(engine, 'enableSleeping');
+            physics.add(engine.timing, 'timeScale', 0, 1.2).step(0.05).listen();
+            physics.add(engine, 'velocityIterations', 1, 10).step(1);
+            physics.add(engine, 'positionIterations', 1, 10).step(1);
+            physics.add(engine, 'constraintIterations', 1, 10).step(1);
+            if (runner) {
+                physics.add(runner, 'enabled');
+            }
+        }
+        if (gui.render) {
+            const render = datGui.addFolder('Render');
+            render
+                .add(gui.render.options, 'wireframes')
+                .onFinishChange(function (value) {
+                if (!value) {
+                    angleIndicatorWidget.setValue(false);
+                    axesWidget.setValue(false);
+                }
+            });
+            render.add(gui.render.options, 'showDebug');
+            render.add(gui.render.options, 'showPositions');
+            render.add(gui.render.options, 'showBroadphase');
+            render.add(gui.render.options, 'showBounds');
+            render.add(gui.render.options, 'showVelocity');
+            render.add(gui.render.options, 'showCollisions');
+            render.add(gui.render.options, 'showSeparations');
+            const axesWidget = render.add(gui.render.options, 'showAxes');
+            const angleIndicatorWidget = render.add(gui.render.options, 'showAngleIndicator');
+            render.add(gui.render.options, 'showSleeping');
+            render.add(gui.render.options, 'showIds');
+            render.add(gui.render.options, 'showVertexNumbers');
+            render.add(gui.render.options, 'showConvexHulls');
+            render.add(gui.render.options, 'showInternalEdges');
+            render.add(gui.render.options, 'enabled');
+            render.open();
+        }
+        document.body.appendChild(gui.datGui.domElement);
+    }
+    static _addBody(gui) {
+        const engine = gui.engine;
+        const options = {
+            density: gui.density,
+            friction: gui.friction,
+            frictionStatic: gui.frictionStatic,
+            frictionAir: gui.frictionAir,
+            restitution: gui.restitution,
+        };
+        if (gui.chamfer && gui.sides > 2) {
+            options.chamfer = {
+                radius: gui.chamfer,
+            };
+        }
+        for (let i = 0; i < gui.amount; i++) {
+            Matter.World.add(engine.world, Matter.Bodies.polygon(gui.offset.x + 120 + i * gui.size + i * 50, gui.offset.y + 200, gui.sides, gui.size, options));
+        }
+    }
+    static _clear(gui) {
+        const engine = gui.engine;
+        const constraints = Matter.Composite.allConstraints(engine.world);
+        let mouseConstraint = null;
+        // find mouse constraints
+        for (const constraint of constraints) {
+            // TODO: need a better way than this
+            if (constraint.label === 'Mouse Constraint') {
+                mouseConstraint = constraint;
+                break;
+            }
+        }
+        Matter.World.clear(engine.world, true);
+        Matter.Engine.clear(engine);
+        // add mouse constraint back in
+        if (mouseConstraint) {
+            Matter.Composite.add(engine.world, mouseConstraint);
+        }
+        // clear scene graph (if defined in controller)
+        if (gui.render) {
+            const renderController = gui.render.controller;
+            if ('clear' in renderController) {
+                // @ts-ignore
+                renderController.clear(gui.render);
+            }
+        }
+        Matter.Events.trigger(gui, 'clear');
+    }
+}
+exports["default"] = Gui;
 
-  // add mouse constraint back in
-  if (mouseConstraint) {
-    Composite.add(engine.world, mouseConstraint);
-  }
-
-  // clear scene graph (if defined in controller)
-  if (gui.render) {
-    var renderController = gui.render.controller;
-    if (renderController.clear)
-      renderController.clear(gui.render);
-  }
-
-  Events.trigger(gui, 'clear');
-};
-
-/*
-*
-*  Events Documentation
-*
-*/
-
-/**
-* Fired after the gui's clear button pressed
-*
-* @event clear
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
-
-/**
-* Fired after the gui's save button pressed
-*
-* @event save
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
-
-/**
-* Fired after the gui's load button pressed
-*
-* @event load
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
 
 /***/ }),
 
-/***/ 142:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+/***/ 159:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const keymaster_1 = __importDefault(__webpack_require__(37));
+const jquery_1 = __importDefault(__webpack_require__(825));
+__webpack_require__(647);
+const Common_1 = __importDefault(__webpack_require__(560));
+const Serializer_1 = __importDefault(__webpack_require__(954));
+const MatterTypes = __importStar(__webpack_require__(381));
+const Matter = MatterTypes.default;
 /**
  * A tool for inspecting worlds.
  * @module Inspector
  */
-
-const Inspector = module.exports = {};
-
-const km = __webpack_require__(37);
-const $ = __webpack_require__(825);
-__webpack_require__(647);
-
-const ToolsCommon = __webpack_require__(994);
-const Serializer = __webpack_require__(367);
-
-const Matter = __webpack_require__(759);
-const Body = Matter.Body;
-const Bounds = Matter.Bounds;
-const Composite = Matter.Composite;
-const Common = Matter.Common;
-const Events = Matter.Events;
-const Mouse = Matter.Mouse;
-const Query = Matter.Query;
-const Vertices = Matter.Vertices;
-const Vector = Matter.Vector;
-const MouseConstraint = Matter.MouseConstraint;
-
-var $body;
-
-/**
- * Creates an inspector
- * @function Gui.create
- * @param {engine} engine
- * @param {render} [render]
- * @param {object} options
- * @return {inspector} The created inspector instance.
- */
-Inspector.create = function(engine, render, options) {
-  var inspector = {
-    engine: null,
-    render: null,
-    isPaused: false,
-    selected: [],
-    selectStart: null,
-    selectEnd: null,
-    selectBounds: Bounds.create(),
-    mousePrevPosition: { x: 0, y: 0 },
-    offset: { x: 0, y: 0 },
-    autoExpand: true,
-    autoHide: true,
-    autoRewind: true,
-    hasExpanded: false,
-    bodyClass: '',
-    exportIndent: 0,
-    clipboard: [],
-    controls: {
-      container: null,
-      worldTree: null
-    },
-    root: Composite.create({
-      label: 'Root'
-    }),
-    keyBindings: []
-  };
-
-  inspector = Common.extend(inspector, options);
-  Inspector.instance = inspector;
-
-  inspector.engine = engine;
-  inspector.render = render;
-
-  if (inspector.render) {
-    inspector.mouse = Mouse.create(inspector.render.canvas);
-    inspector.mouseConstraint = MouseConstraint.create(engine, { mouse: inspector.mouse });
-  } else {
-    inspector.mouse = {
-      position: {
-        x: 0,
-        y: 0
-      }
-    };
-  }
-
-  if (Serializer) {
-    inspector.serializer = Serializer.create();
-    localStorage.removeItem('pauseState');
-  }
-
-  $body = $('body');
-
-  Composite.add(inspector.root, engine.world);
-  engine.world.isModified = true;
-  engine.world.parent = null;
-
-  let styles = __webpack_require__(10);
-  ToolsCommon.injectStyles(styles, 'js-tree-style');
-
-  styles = __webpack_require__(521);
-  ToolsCommon.injectStyles(styles, 'matter-inspector-style');
-
-  inspector.keyBind = Common.chain(km, (key) => {
-    inspector.keyBindings.push(key);
-  });
-
-  _initControls(inspector);
-  _initEngineEvents(inspector);
-  _initTree(inspector);
-  _initKeybinds(inspector);
-
-  return inspector;
-};
-
-/**
- * Destroys the inspector
- * @function Gui.destroy
- * @param {Inspector} inspector
- */
-Inspector.destroy = function(inspector) {
-  inspector.controls.worldTree.data('jstree').destroy();
-
-  var inspectorElements = [].slice.call(
-    document.body.querySelectorAll(
-      '.ins-container', '.vakata-context', '.jstree-marker'
-    )
-  );
-
-  inspectorElements.forEach(ToolsCommon.domRemove);
-
-  inspector.keyBindings.forEach((key) => {
-    km.unbind(key);
-  });
-
-  Events.off(inspector.engine, 'beforeUpdate', inspector.beforeEngineUpdate);
-  
-  if (inspector.render) {
-    Events.off(inspector.render, 'afterRender', inspector.afterRender);
-    Events.off(inspector.mouseConstraint);
-  }
-};
-
-var _initControls = function(inspector) {
-  var controls = inspector.controls;
-
-  var $inspectorContainer = $('<div class="ins-container">'),
-    $topPanel = $('<div class="ins-top-panel">'),
-    $buttonGroup = $('<div class="ins-control-group">'),
-    $searchBox = $('<input class="ins-search-box" type="search" placeholder="search">'),
-    $importButton = $('<button class="ins-import-button ins-button">Import</button>'),
-    $exportButton = $('<button class="ins-export-button ins-button">Export</button>'),
-    $pauseButton = $('<button class="ins-pause-button ins-button">Pause</button>'),
-    $helpButton = $('<button class="ins-help-button ins-button">Help</button>'),
-    $addCompositeButton = $('<button aria-label="Add composite body" title="Add composite body" class="ins-add-button ins-button">+</button>');
-  
-  if (Serializer) {
-    $buttonGroup.append($pauseButton, $importButton, $exportButton, $helpButton);
-  } else {
-    $buttonGroup.append($pauseButton, $helpButton);
-  }
-
-  $inspectorContainer.prepend($topPanel, $searchBox, $addCompositeButton);
-  $body.prepend($inspectorContainer);
-
-  controls.pauseButton = $pauseButton;
-  controls.importButton = $importButton;
-  controls.exportButton = $exportButton;
-  controls.helpButton = $helpButton;
-  controls.searchBox = $searchBox;
-  controls.container = $inspectorContainer;
-  controls.addCompositeButton = $addCompositeButton;
-
-  controls.pauseButton.click(function() {
-    _setPaused(inspector, !inspector.isPaused);
-  });
-
-  controls.exportButton.click(function() {
-    _exportFile(inspector);
-  });
-
-  controls.importButton.click(function() {
-    _importFile(inspector);
-  });
-
-  controls.helpButton.click(function() {
-    _showHelp(inspector);
-  });
-
-  controls.addCompositeButton.click(function() {
-    _addNewComposite(inspector);
-  });
-
-  var searchTimeout;
-  controls.searchBox.keyup(function () {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(function () {
-      var value = controls.searchBox.val(),
-        worldTree = controls.worldTree.data('jstree');
-      worldTree.search(value);
-    }, 250);
-  });
-};
-
-var _showHelp = function() {
-  var help = "Matter Tools\n\n";
-
-  help += "Drag nodes in the tree to move them between composites.\n";
-  help += "Use browser's developer console to inspect selected objects.\n";
-  help += "Note: selections only render if renderer supports it.\n\n";
-
-  help += "[shift + space] pause or play simulation.\n";
-  help += "[right click] and drag on empty space to select a region.\n";
-  help += "[right click] and drag on an object to move it.\n";
-  help += "[right click + shift] and drag to move whole selection.\n\n";
-
-  help += "[ctrl-c] to copy selected world objects.\n";
-  help += "[ctrl-v] to paste copied world objects to mouse position.\n";
-  help += "[del] or [backspace] delete selected objects.\n\n";
-
-  help += "[shift + s] scale-xy selected objects with mouse or arrows.\n";
-  help += "[shift + s + d] scale-x selected objects with mouse or arrows.\n";
-  help += "[shift + s + f] scale-y selected objects with mouse or arrows.\n";
-  help += "[shift + r] rotate selected objects with mouse or arrows.\n\n";
-
-  help += "[shift + q] set selected objects as static (can't be undone).\n";
-  help += "[shift + i] import objects.\n";
-  help += "[shift + o] export selected objects.\n";
-  help += "[shift + h] toggle Matter.Gui.\n";
-  help += "[shift + y] toggle auto-hide.\n";
-  help += "[shift + r] toggle auto-rewind on play/pause.\n\n";
-
-  help += "[shift + j] show this help message.";
-
-  alert(help);
-};
-
-var _initKeybinds = function(inspector) {
-  inspector.keyBind('shift+space', function() {
-    _setPaused(inspector, !inspector.isPaused);
-  });
-
-  if (inspector.serializer) {
-    inspector.keyBind('shift+o', function() {
-      _exportFile(inspector);
-    });
-
-    inspector.keyBind('shift+i', function() {
-      _importFile(inspector);
-    });
-  }
-
-  inspector.keyBind('shift+j', function() {
-    _showHelp(inspector);
-  });
-
-  inspector.keyBind('shift+y', function() {
-    inspector.autoHide = !inspector.autoHide;
-    $body.toggleClass('ins-auto-hide gui-auto-hide', inspector.autoHide);
-  });
-
-  inspector.keyBind('shift+r', function() {
-    inspector.autoRewind = !inspector.autoRewind;
-    if (!inspector.autoRewind)
-      localStorage.removeItem('pauseState');
-  });
-
-  inspector.keyBind('shift+q', function() {
-    for (var i = 0; i < inspector.selected.length; i++) {
-      var object = inspector.selected[i].data;
-      if (object.type === 'body' && !object.isStatic)
-        Body.setStatic(object, true);
-    }
-  });
-
-  inspector.keyBind('del', function() {
-    _deleteSelectedObjects(inspector);
-  });
-
-  inspector.keyBind('backspace', function() {
-    _deleteSelectedObjects(inspector);
-  });
-
-  if (inspector.serializer) {
-    inspector.keyBind('ctrl+c', function() {
-      _copySelectedObjects(inspector);
-    });
-
-    inspector.keyBind('ctrl+v', function() {
-      _pasteSelectedObjects(inspector);
-    });
-  }
-
-  // prevent the backspace key from navigating back
-  // http://stackoverflow.com/questions/1495219/how-can-i-prevent-the-backspace-key-from-navigating-back
-  $(document).unbind('keydown').bind('keydown', function (event) {
-    var doPrevent = false;
-    if (event.keyCode === 8) {
-      var d = event.srcElement || event.target;
-      if ((d.tagName.toUpperCase() === 'INPUT' && (d.type.toUpperCase() === 'TEXT' || d.type.toUpperCase() === 'PASSWORD' || d.type.toUpperCase() === 'FILE' || d.type.toUpperCase() === 'EMAIL' || d.type.toUpperCase() === 'SEARCH')) || d.tagName.toUpperCase() === 'TEXTAREA') {
-        doPrevent = d.readOnly || d.disabled;
-      }
-      else {
-        doPrevent = true;
-      }
-    }
-
-    if (doPrevent) {
-      event.preventDefault();
-    }
-  });
-};
-
-var _initTree = function(inspector) {
-  var engine = inspector.engine,
-    controls = inspector.controls,
-    deferTimeout;
-
-  var worldTreeOptions = {
-    'core': {
-      'check_callback': true,
-      'animation': false
-    },
-    'dnd': {
-      'copy': false
-    },
-    'search': {
-      'show_only_matches': true,
-      'fuzzy': false
-    },
-    'types': {
-      '#': {
-        'valid_children': []
-      },
-      'body': {
-        'valid_children': []
-      },
-      'constraint': {
-        'valid_children': []
-      },
-      'composite': {
-        'valid_children': []
-      },
-      'bodies': {
-        'valid_children': ['body']
-      },
-      'constraints': {
-        'valid_children': ['constraint']
-      },
-      'composites': {
-        'valid_children': ['composite']
-      }
-    },
-    'plugins' : ['dnd', 'types', 'unique', 'search']
-  };
-
-  controls.worldTree = $('<div class="ins-world-tree">').jstree(worldTreeOptions);
-  controls.container.append(controls.worldTree);
-
-  inspector.hasExpanded = false;
-
-  controls.worldTree.on('refresh.jstree', function() {
-    // expand tree on first update
-    if (inspector.autoExpand && !inspector.hasExpanded) {
-      inspector.hasExpanded = true;
-      controls.worldTree.jstree('open_all');
-    }
-  });
-
-  controls.worldTree.on('changed.jstree', function(event, data) {
-    var selected = [],
-      worldTree = controls.worldTree.data('jstree');
-
-    if (data.action !== 'select_node')
-      return;
-
-    // defer selection update until selection has finished propagating
-    clearTimeout(deferTimeout);
-    deferTimeout = setTimeout(function() {
-      data.selected = worldTree.get_selected();
-
-      for (var i = 0; i < data.selected.length; i++) {
-        var nodeId = data.selected[i],
-          objectType = nodeId.split('_')[0],
-          objectId = nodeId.split('_')[1],
-          worldObject = Composite.get(engine.world, objectId, objectType);
-
-        switch (objectType) {
-        case 'body':
-        case 'constraint':
-        case 'composite':
-          selected.push(worldObject);
-          break;
+class Inspector {
+    /**
+     * Creates an inspector
+     * @function create
+     * @param engine
+     * @param render
+     * @param options
+     * @return The created inspector instance.
+     */
+    static create(engine, render, options = {}) {
+        let inspector = {
+            isPaused: false,
+            selected: [],
+            selectStart: null,
+            selectEnd: null,
+            // @ts-ignore
+            selectBounds: Matter.Bounds.create(),
+            mousePrevPosition: { x: 0, y: 0 },
+            offset: { x: 0, y: 0 },
+            autoExpand: true,
+            autoHide: true,
+            autoRewind: true,
+            hasExpanded: false,
+            bodyClass: '',
+            exportIndent: 0,
+            clipboard: [],
+            root: Matter.Composite.create({
+                label: 'Root',
+            }),
+            keyBindings: [],
+            events: {},
+        };
+        inspector = Matter.Common.extend(inspector, options);
+        Inspector.instance = inspector;
+        inspector.engine = engine;
+        inspector.render = render;
+        if (inspector.render) {
+            inspector.mouse = Matter.Mouse.create(inspector.render.canvas);
+            inspector.mouseConstraint = Matter.MouseConstraint.create(engine, {
+                mouse: inspector.mouse,
+            });
         }
-      }
-
-      _setSelectedObjects(inspector, selected);
-
-    }, 1);
-  });
-
-  $(document).on('dnd_stop.vakata', function(event, data) {
-    var worldTree = controls.worldTree.data('jstree'),
-      nodes = data.data.nodes;
-
-    // handle drag and drop
-    // move items between composites
-    for (var i = 0; i < nodes.length; i++) {
-      var node = worldTree.get_node(nodes[i]),
-        parentNode = worldTree.get_node(worldTree.get_parent(nodes[i])),
-        prevCompositeId = node.data.compositeId,
-        newCompositeId = parentNode.data.compositeId;
-
-      if (prevCompositeId === newCompositeId)
-        continue;
-
-      var nodeId = nodes[i],
-        objectType = nodeId.split('_')[0],
-        objectId = nodeId.split('_')[1],
-        worldObject = Composite.get(inspector.root, objectId, objectType),
-        prevComposite = Composite.get(inspector.root, prevCompositeId, 'composite'),
-        newComposite = Composite.get(inspector.root, newCompositeId, 'composite');
-
-      Composite.move(prevComposite, worldObject, newComposite);
+        else {
+            inspector.mouse = {
+                position: {
+                    x: 0,
+                    y: 0,
+                },
+            };
+        }
+        if (Serializer_1.default) {
+            inspector.serializer = Serializer_1.default.create();
+            localStorage.removeItem('pauseState');
+        }
+        Inspector.$body = (0, jquery_1.default)('body');
+        Matter.Composite.add(inspector.root, engine.world);
+        engine.world.isModified = true;
+        engine.world.parent = null;
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        let styles = __webpack_require__(10);
+        Common_1.default.injectStyles(styles, 'js-tree-style');
+        styles = __webpack_require__(521);
+        Common_1.default.injectStyles(styles, 'matter-inspector-style');
+        inspector.keyBind = Matter.Common.chain(keymaster_1.default, (key) => {
+            inspector.keyBindings.push(key);
+        });
+        Inspector._initControls(inspector);
+        Inspector._initEngineEvents(inspector);
+        Inspector._initTree(inspector);
+        Inspector._initKeyBinds(inspector);
+        return inspector;
     }
-  });
-
-  controls.worldTree.on('dblclick.jstree', function() {
-    var worldTree = controls.worldTree.data('jstree'),
-      selected = worldTree.get_selected();
-
-    // select all children of double clicked node
-    for (var i = 0; i < selected.length; i++) {
-      var nodeId = selected[i],
-        objectType = nodeId.split('_')[0];
-
-      switch (objectType) {
-      case 'composite':
-      case 'composites':
-      case 'bodies':
-      case 'constraints':
-        var children = worldTree.get_node(nodeId).children;
-
-        for (var j = 0; j < children.length; j++) 
-          worldTree.select_node(children[j], false);
-
-        break;
-      }
+    /**
+     * Destroys the inspector
+     * @function destroy
+     * @param inspector
+     */
+    static destroy(inspector) {
+        var _a;
+        (_a = inspector.controls.worldTree) === null || _a === void 0 ? void 0 : _a.data('jstree').destroy();
+        const inspectorElements = [].slice.call(document.body.querySelectorAll('.ins-container, .vakata-context, .jstree-marker'));
+        inspectorElements.forEach(Common_1.default.domRemove);
+        inspector.keyBindings.forEach((key) => {
+            keymaster_1.default.unbind(key);
+        });
+        Matter.Events.off(inspector.engine, 'beforeUpdate', inspector.beforeEngineUpdate);
+        if (inspector.render) {
+            Matter.Events.off(inspector.render, 'afterRender', inspector.afterRender);
+            // @ts-ignore
+            Matter.Events.off(inspector.mouseConstraint);
+        }
     }
-  });
-};
-
-var _addBodyClass = function(inspector, classNames) {
-  // only apply changes to prevent DOM lag
-  if (inspector.bodyClass.indexOf(' ' + classNames) === -1) {
-    $body.addClass(classNames);
-    inspector.bodyClass = ' ' + $body.attr('class');
-  }
-};
-
-var _removeBodyClass = function(inspector, classNames) {
-  // only apply changes to prevent DOM lag
-  var updateRequired = false,
-    classes = classNames.split(' ');
-
-  for (var i = 0; i < classes.length; i++) {
-    updateRequired = inspector.bodyClass.indexOf(' ' + classes[i]) !== -1;
-    if (updateRequired)
-      break;
-  }
-
-  if (updateRequired) {
-    $body.removeClass(classNames);
-    inspector.bodyClass = ' ' + $body.attr('class');
-  }
-};
-
-var _getMousePosition = function(inspector) {
-  return Vector.add(inspector.mouse.position, inspector.offset);
-};
-
-var _initEngineEvents = function(inspector) {
-  var engine = inspector.engine,
-    mouse = inspector.mouse,
-    mousePosition = _getMousePosition(inspector),
-    controls = inspector.controls;
-
-  inspector.beforeEngineUpdate = function() {
-    // update mouse position reference
-    mousePosition = _getMousePosition(inspector);
-
-    var mouseDelta = mousePosition.x - inspector.mousePrevPosition.x,
-      keyDelta = km.isPressed('up') + km.isPressed('right') - km.isPressed('down') - km.isPressed('left'),
-      delta = mouseDelta + keyDelta;
-
-    // update interface when world changes
-    if (engine.world.isModified) {
-      var data = _generateCompositeTreeNode(inspector.root, null, true);
-      _updateTree(controls.worldTree.data('jstree'), data);
-      _setSelectedObjects(inspector, []);
+    static _initControls(inspector) {
+        const controls = inspector.controls;
+        const $inspectorContainer = (0, jquery_1.default)('<div class="ins-container">'), $topPanel = (0, jquery_1.default)('<div class="ins-top-panel">'), $buttonGroup = (0, jquery_1.default)('<div class="ins-control-group">'), $searchBox = (0, jquery_1.default)('<input class="ins-search-box" type="search" placeholder="search">'), $importButton = (0, jquery_1.default)('<button class="ins-import-button ins-button">Import</button>'), $exportButton = (0, jquery_1.default)('<button class="ins-export-button ins-button">Export</button>'), $pauseButton = (0, jquery_1.default)('<button class="ins-pause-button ins-button">Pause</button>'), $helpButton = (0, jquery_1.default)('<button class="ins-help-button ins-button">Help</button>'), $addCompositeButton = (0, jquery_1.default)('<button aria-label="Add composite body" title="Add composite body" class="ins-add-button ins-button">+</button>');
+        if (Serializer_1.default) {
+            $buttonGroup.append($pauseButton, $importButton, $exportButton, $helpButton);
+        }
+        else {
+            $buttonGroup.append($pauseButton, $helpButton);
+        }
+        $inspectorContainer.prepend($topPanel, $searchBox, $addCompositeButton);
+        Inspector.$body.prepend($inspectorContainer);
+        controls.pauseButton = $pauseButton;
+        controls.importButton = $importButton;
+        controls.exportButton = $exportButton;
+        controls.helpButton = $helpButton;
+        controls.searchBox = $searchBox;
+        controls.container = $inspectorContainer;
+        controls.addCompositeButton = $addCompositeButton;
+        controls.pauseButton.on('click', function () {
+            Inspector._setPaused(inspector, !inspector.isPaused);
+        });
+        controls.exportButton.on('click', function () {
+            Inspector._exportFile(inspector);
+        });
+        controls.importButton.on('click', function () {
+            Inspector._importFile(inspector);
+        });
+        controls.helpButton.on('click', function () {
+            Inspector._showHelp();
+        });
+        controls.addCompositeButton.on('click', function () {
+            Inspector._addNewComposite(inspector);
+        });
+        let searchTimeout;
+        controls.searchBox.on('keyup', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function () {
+                const value = controls.searchBox.val();
+                const worldTree = controls.worldTree.data('jstree');
+                worldTree.search(value);
+            }, 250);
+        });
     }
-
-    // update region selection
-    if (inspector.selectStart !== null) {
-      inspector.selectEnd.x = mousePosition.x;
-      inspector.selectEnd.y = mousePosition.y;
-      Bounds.update(inspector.selectBounds, [inspector.selectStart, inspector.selectEnd]);
+    static _showHelp() {
+        let help = 'Matter Tools\n\n';
+        help += 'Drag nodes in the tree to move them between composites.\n';
+        help += "Use browser's developer console to inspect selected objects.\n";
+        help += 'Note: selections only render if renderer supports it.\n\n';
+        help += '[shift + space] pause or play simulation.\n';
+        help += '[right click] and drag on empty space to select a region.\n';
+        help += '[right click] and drag on an object to move it.\n';
+        help += '[right click + shift] and drag to move whole selection.\n\n';
+        help += '[ctrl-c] to copy selected world objects.\n';
+        help += '[ctrl-v] to paste copied world objects to mouse position.\n';
+        help += '[del] or [backspace] delete selected objects.\n\n';
+        help += '[shift + s] scale-xy selected objects with mouse or arrows.\n';
+        help += '[shift + s + d] scale-x selected objects with mouse or arrows.\n';
+        help += '[shift + s + f] scale-y selected objects with mouse or arrows.\n';
+        help += '[shift + r] rotate selected objects with mouse or arrows.\n\n';
+        help += "[shift + q] set selected objects as static (can't be undone).\n";
+        help += '[shift + i] import objects.\n';
+        help += '[shift + o] export selected objects.\n';
+        help += '[shift + h] toggle Matter.Gui.\n';
+        help += '[shift + y] toggle auto-hide.\n';
+        help += '[shift + r] toggle auto-rewind on play/pause.\n\n';
+        help += '[shift + j] show this help message.';
+        alert(help);
     }
-
-    // rotate mode
-    if (km.shift && km.isPressed('r')) {
-      var rotateSpeed = 0.03,
-        angle = Math.max(-2, Math.min(2, delta)) * rotateSpeed;
-
-      _addBodyClass(inspector, 'ins-cursor-rotate');
-      _rotateSelectedObjects(inspector, angle);
-    } else {
-      _removeBodyClass(inspector, 'ins-cursor-rotate');
-    }
-
-    // scale mode
-    if (km.shift && km.isPressed('s')) {
-      var scaleSpeed = 0.02,
-        scale = 1 + Math.max(-2, Math.min(2, delta)) * scaleSpeed;
-
-      _addBodyClass(inspector, 'ins-cursor-scale');
-
-      var scaleX,
-        scaleY;
-      
-      if (km.isPressed('d')) {
-        scaleX = scale;
-        scaleY = 1;
-      } else if (km.isPressed('f')) {
-        scaleX = 1;
-        scaleY = scale;
-      } else {
-        scaleX = scaleY = scale;
-      }
-
-      _scaleSelectedObjects(inspector, scaleX, scaleY);
-    } else {
-      _removeBodyClass(inspector, 'ins-cursor-scale');
-    }
-
-    // translate mode
-    if (mouse.button === 2) {
-      _addBodyClass(inspector, 'ins-cursor-move');
-      _moveSelectedObjects(inspector, mousePosition.x, mousePosition.y);
-    } else {
-      _removeBodyClass(inspector, 'ins-cursor-move');
-    }
-
-    inspector.mousePrevPosition = Common.clone(mousePosition);
-  };
-
-  Events.on(inspector.engine, 'beforeUpdate', inspector.beforeEngineUpdate);
-
-  if (inspector.mouseConstraint) {
-    Events.on(inspector.mouseConstraint, 'mouseup', function() {
-      // select objects in region if making a region selection
-      if (inspector.selectStart !== null) {
-        var selected = Query.region(Composite.allBodies(engine.world), inspector.selectBounds);
-        _setSelectedObjects(inspector, selected);
-      }
-
-      // clear selection region
-      inspector.selectStart = null;
-      inspector.selectEnd = null;
-      Events.trigger(inspector, 'selectEnd');
-    });
-
-    Events.on(inspector.mouseConstraint, 'mousedown', function() {
-      var bodies = Composite.allBodies(engine.world),
-        constraints = Composite.allConstraints(engine.world),
-        isUnionSelect = km.shift || km.control,
-        worldTree = inspector.controls.worldTree.data('jstree'),
-        i;
-
-      if (mouse.button === 2) {
-        var hasSelected = false;
-
-        for (i = 0; i < bodies.length; i++) {
-          var body = bodies[i];
-
-          if (Bounds.contains(body.bounds, mousePosition) && Vertices.contains(body.vertices, mousePosition)) {
-
-            if (isUnionSelect) {
-              _addSelectedObject(inspector, body);
-            } else {
-              _setSelectedObjects(inspector, [body]);
+    static _initKeyBinds(inspector) {
+        inspector.keyBind('shift+space', function () {
+            Inspector._setPaused(inspector, !inspector.isPaused);
+        });
+        if (inspector.serializer) {
+            inspector.keyBind('shift+o', function () {
+                Inspector._exportFile(inspector);
+            });
+            inspector.keyBind('shift+i', function () {
+                Inspector._importFile(inspector);
+            });
+        }
+        inspector.keyBind('shift+j', function () {
+            Inspector._showHelp();
+        });
+        inspector.keyBind('shift+y', function () {
+            inspector.autoHide = !inspector.autoHide;
+            Inspector.$body.toggleClass('ins-auto-hide gui-auto-hide', inspector.autoHide);
+        });
+        inspector.keyBind('shift+r', function () {
+            inspector.autoRewind = !inspector.autoRewind;
+            if (!inspector.autoRewind)
+                localStorage.removeItem('pauseState');
+        });
+        inspector.keyBind('shift+q', function () {
+            for (let i = 0; i < inspector.selected.length; i++) {
+                const object = inspector.selected[i].data;
+                if (object.type === 'body' && !object.isStatic) {
+                    Matter.Body.setStatic(object, true);
+                }
             }
-
-            hasSelected = true;
-            break;
-          }
+        });
+        inspector.keyBind('del', function () {
+            Inspector._deleteSelectedObjects(inspector);
+        });
+        inspector.keyBind('backspace', function () {
+            Inspector._deleteSelectedObjects(inspector);
+        });
+        if (inspector.serializer) {
+            inspector.keyBind('ctrl+c', function () {
+                Inspector._copySelectedObjects(inspector);
+            });
+            inspector.keyBind('ctrl+v', function () {
+                Inspector._pasteSelectedObjects(inspector);
+            });
         }
-
-        if (!hasSelected) {
-          for (i = 0; i < constraints.length; i++) {
-            var constraint = constraints[i],
-              bodyA = constraint.bodyA,
-              bodyB = constraint.bodyB;
-
-            if (constraint.label.indexOf('Mouse Constraint') !== -1)
-              continue;
-
-            var pointAWorld = constraint.pointA,
-              pointBWorld = constraint.pointB;
-
-            if (bodyA) pointAWorld = Vector.add(bodyA.position, constraint.pointA);
-            if (bodyB) pointBWorld = Vector.add(bodyB.position, constraint.pointB);
-
-            if (!pointAWorld || !pointBWorld)
-              continue;
-
-            var distA = Vector.magnitudeSquared(Vector.sub(mousePosition, pointAWorld)),
-              distB = Vector.magnitudeSquared(Vector.sub(mousePosition, pointBWorld));
-
-            if (distA < 100 || distB < 100) {
-              if (isUnionSelect) {
-                _addSelectedObject(inspector, constraint);
-              } else {
-                _setSelectedObjects(inspector, [constraint]);
-              }
-
-              hasSelected = true;
-              break;
+        // prevent the backspace key from navigating back
+        // http://stackoverflow.com/questions/1495219/how-can-i-prevent-the-backspace-key-from-navigating-back
+        (0, jquery_1.default)(document)
+            .unbind('keydown')
+            .bind('keydown', function (event) {
+            let doPrevent = false;
+            if (event.keyCode === 8) {
+                // @ts-ignore
+                const d = event.srcElement || event.target;
+                if ((d.tagName.toUpperCase() === 'INPUT' &&
+                    (d.type.toUpperCase() === 'TEXT' ||
+                        d.type.toUpperCase() === 'PASSWORD' ||
+                        d.type.toUpperCase() === 'FILE' ||
+                        d.type.toUpperCase() === 'EMAIL' ||
+                        d.type.toUpperCase() === 'SEARCH')) ||
+                    d.tagName.toUpperCase() === 'TEXTAREA') {
+                    doPrevent = d.readOnly || d.disabled;
+                }
+                else {
+                    doPrevent = true;
+                }
             }
-          }
-
-          if (!hasSelected) {
-            worldTree.deselect_all(true);
-            _setSelectedObjects(inspector, []);
-
-            inspector.selectStart = Common.clone(mousePosition);
-            inspector.selectEnd = Common.clone(mousePosition);
-            Bounds.update(inspector.selectBounds, [inspector.selectStart, inspector.selectEnd]);
-          
-            Events.trigger(inspector, 'selectStart');
-          } else {
-            inspector.selectStart = null;
-            inspector.selectEnd = null;
-          }
+            if (doPrevent) {
+                event.preventDefault();
+            }
+        });
+    }
+    static _initTree(inspector) {
+        const engine = inspector.engine;
+        const controls = inspector.controls;
+        let deferTimeout;
+        const worldTreeOptions = {
+            core: {
+                check_callback: true,
+                animation: false,
+            },
+            dnd: {
+                copy: false,
+            },
+            search: {
+                show_only_matches: true,
+                fuzzy: false,
+            },
+            types: {
+                '#': {
+                    valid_children: [],
+                },
+                body: {
+                    valid_children: [],
+                },
+                constraint: {
+                    valid_children: [],
+                },
+                composite: {
+                    valid_children: [],
+                },
+                bodies: {
+                    valid_children: ['body'],
+                },
+                constraints: {
+                    valid_children: ['constraint'],
+                },
+                composites: {
+                    valid_children: ['composite'],
+                },
+            },
+            plugins: ['dnd', 'types', 'unique', 'search'],
+        };
+        // @ts-ignore
+        controls.worldTree = (0, jquery_1.default)('<div class="ins-world-tree">').jstree(worldTreeOptions);
+        controls.container.append(controls.worldTree);
+        inspector.hasExpanded = false;
+        controls.worldTree.on('refresh.jstree', function () {
+            // expand tree on first update
+            if (inspector.autoExpand && !inspector.hasExpanded) {
+                inspector.hasExpanded = true;
+                // @ts-ignore
+                controls.worldTree.jstree('open_all');
+            }
+        });
+        controls.worldTree.on('changed.jstree', function (event, data) {
+            const selected = [];
+            const worldTree = controls.worldTree.data('jstree');
+            if (data.action !== 'select_node') {
+                return;
+            }
+            // defer selection update until selection has finished propagating
+            clearTimeout(deferTimeout);
+            deferTimeout = setTimeout(function () {
+                data.selected = worldTree.get_selected();
+                for (let i = 0; i < data.selected.length; i++) {
+                    const nodeId = data.selected[i];
+                    const objectType = nodeId.split('_')[0];
+                    const objectId = nodeId.split('_')[1];
+                    const worldObject = Matter.Composite.get(engine.world, objectId, objectType);
+                    switch (objectType) {
+                        case 'body':
+                        case 'constraint':
+                        case 'composite':
+                            selected.push(worldObject);
+                            break;
+                    }
+                }
+                Inspector._setSelectedObjects(inspector, selected);
+            }, 1);
+        });
+        (0, jquery_1.default)(document).on('dnd_stop.vakata', function (event, data) {
+            const worldTree = controls.worldTree.data('jstree');
+            const nodes = data.data.nodes;
+            // handle drag and drop
+            // move items between composites
+            for (let i = 0; i < nodes.length; i++) {
+                const node = worldTree.get_node(nodes[i]);
+                const parentNode = worldTree.get_node(worldTree.get_parent(nodes[i]));
+                const prevCompositeId = node.data.compositeId;
+                const newCompositeId = parentNode.data.compositeId;
+                if (prevCompositeId === newCompositeId) {
+                    continue;
+                }
+                const nodeId = nodes[i];
+                const objectType = nodeId.split('_')[0];
+                const objectId = nodeId.split('_')[1];
+                const worldObject = Matter.Composite.get(inspector.root, objectId, objectType);
+                const prevComposite = Matter.Composite.get(inspector.root, prevCompositeId, 'composite');
+                const newComposite = Matter.Composite.get(inspector.root, newCompositeId, 'composite');
+                Matter.Composite.move(prevComposite, worldObject, newComposite);
+            }
+        });
+        controls.worldTree.on('dblclick.jstree', function () {
+            const worldTree = controls.worldTree.data('jstree');
+            const selected = worldTree.get_selected();
+            // select all children of double clicked node
+            for (let i = 0; i < selected.length; i++) {
+                const nodeId = selected[i];
+                const objectType = nodeId.split('_')[0];
+                switch (objectType) {
+                    case 'composite':
+                    case 'composites':
+                    case 'bodies':
+                    case 'constraints':
+                        const children = worldTree.get_node(nodeId).children;
+                        for (let j = 0; j < children.length; j++) {
+                            worldTree.select_node(children[j], false);
+                        }
+                        break;
+                }
+            }
+        });
+    }
+    static _addBodyClass(inspector, classNames) {
+        // only apply changes to prevent DOM lag
+        if (inspector.bodyClass.indexOf(' ' + classNames) === -1) {
+            Inspector.$body.addClass(classNames);
+            inspector.bodyClass = ' ' + Inspector.$body.attr('class');
         }
-      }
-
-      if (mouse.button === 2 && inspector.selected.length > 0) {
-        _addBodyClass(inspector, 'ins-cursor-move');
-
-        _updateSelectedMouseDownOffset(inspector);
-      }
-    });
-  }
-
-  if (inspector.render) {
-    inspector.afterRender = function() {
-      var renderController = inspector.render.controller,
-        context = inspector.render.context;
-      if (renderController.inspector)
-        renderController.inspector(inspector, context);
-    };
-
-    Events.on(inspector.render, 'afterRender', inspector.afterRender);
-  }
-};
-
-var _deleteSelectedObjects = function(inspector) {
-  var objects = [],
-    object,
-    worldTree = inspector.controls.worldTree.data('jstree'),
-    i;
-
-  // delete objects in world
-  for (i = 0; i < inspector.selected.length; i++) {
-    object = inspector.selected[i].data;
-    if (object !== inspector.engine.world)
-      objects.push(object);
-  }
-
-  // also delete non-world composites (selected only in the UI tree)
-  var selectedNodes = worldTree.get_selected();
-  for (i = 0; i < selectedNodes.length; i++) {
-    var node = worldTree.get_node(selectedNodes[i]);
-    if (node.type === 'composite') {
-      node = worldTree.get_node(node.children[0]);
-      if (node.data) {
-        var compositeId = node.data.compositeId;
-        object = Composite.get(inspector.root, compositeId, 'composite');
-        if (object && object !== inspector.engine.world) {
-          objects.push(object);
-          worldTree.delete_node(selectedNodes[i]);
+    }
+    static _removeBodyClass(inspector, classNames) {
+        // only apply changes to prevent DOM lag
+        let updateRequired = false;
+        const classes = classNames.split(' ');
+        for (let i = 0; i < classes.length; i++) {
+            updateRequired = inspector.bodyClass.indexOf(' ' + classes[i]) !== -1;
+            if (updateRequired)
+                break;
         }
-      }
-    }
-  }
-
-  Composite.remove(inspector.root, objects, true);
-  _setSelectedObjects(inspector, []);
-};
-
-var _copySelectedObjects = function(inspector) {
-  inspector.clipboard.length = 0;
-
-  // put selected objects into clipboard
-  for (var i = 0; i < inspector.selected.length; i++) {
-    var object = inspector.selected[i].data;
-
-    if (object.type !== 'body')
-      continue;
-
-    inspector.clipboard.push(object);
-  }
-};
-
-var _pasteSelectedObjects = function(inspector) {
-  if (!inspector.serializer) {
-    return;
-  }
-
-  var objects = [],
-    worldTree = inspector.controls.worldTree.data('jstree');
-
-  // copy objects in world
-  for (var i = 0; i < inspector.clipboard.length; i++) {
-    var object = inspector.clipboard[i],
-      clone = Serializer.clone(inspector.serializer, object);
-    Body.translate(clone, { x: 50, y: 50 });
-
-    // add the clone to the same composite as original
-    var node = worldTree.get_node(object.type + '_' + object.id, false),
-      compositeId = node.data.compositeId,
-      composite = Composite.get(inspector.engine.world, compositeId, 'composite');
-
-    Composite.add(composite, clone);
-
-    objects.push(clone);
-  }
-
-  // select clones after waiting for tree to update
-  setTimeout(function() {
-    _setSelectedObjects(inspector, objects);
-  }, 200);
-};
-
-var _updateSelectedMouseDownOffset = function(inspector) {
-  var selected = inspector.selected,
-    mousePosition = _getMousePosition(inspector),
-    item,
-    data;
-
-  for (var i = 0; i < selected.length; i++) {
-    item = selected[i];
-    data = item.data;
-
-    if (data.position) {
-      item.mousedownOffset = {
-        x: mousePosition.x - data.position.x,
-        y: mousePosition.y - data.position.y
-      };
-    } else if (data.pointA && !data.bodyA) {
-      item.mousedownOffset = {
-        x: mousePosition.x - data.pointA.x,
-        y: mousePosition.y - data.pointA.y
-      };
-    } else if (data.pointB && !data.bodyB) {
-      item.mousedownOffset = {
-        x: mousePosition.x - data.pointB.x,
-        y: mousePosition.y - data.pointB.y
-      };
-    }
-  }
-};
-
-var _moveSelectedObjects = function(inspector, x, y) {
-  var selected = inspector.selected,
-    item,
-    data;
-
-  for (var i = 0; i < selected.length; i++) {
-    item = selected[i];
-    data = item.data;
-
-    if (!item.mousedownOffset)
-      continue;
-
-    switch (data.type) {
-
-    case 'body':
-      var delta = {
-        x: x - data.position.x - item.mousedownOffset.x,
-        y: y - data.position.y - item.mousedownOffset.y
-      };
-
-      Body.translate(data, delta);
-      data.positionPrev.x = data.position.x;
-      data.positionPrev.y = data.position.y;
-
-      break;
-
-    case 'constraint':
-      var point = data.pointA;
-      if (data.bodyA)
-        point = data.pointB;
-
-      point.x = x - item.mousedownOffset.x;
-      point.y = y - item.mousedownOffset.y;
-
-      var initialPointA = data.bodyA ? Vector.add(data.bodyA.position, data.pointA) : data.pointA,
-        initialPointB = data.bodyB ? Vector.add(data.bodyB.position, data.pointB) : data.pointB;
-
-      data.length = Vector.magnitude(Vector.sub(initialPointA, initialPointB));
-
-      break;
-
-    }
-  }
-};
-
-var _scaleSelectedObjects = function(inspector, scaleX, scaleY) {
-  var selected = inspector.selected,
-    item,
-    data;
-
-  for (var i = 0; i < selected.length; i++) {
-    item = selected[i];
-    data = item.data;
-
-    switch (data.type) {
-    case 'body':
-      Body.scale(data, scaleX, scaleY, data.position);
-
-      if (data.circleRadius)
-        data.circleRadius *= scaleX;
-
-      break;
-    }
-  }
-};
-
-var _rotateSelectedObjects = function(inspector, angle) {
-  var selected = inspector.selected,
-    item,
-    data;
-
-  for (var i = 0; i < selected.length; i++) {
-    item = selected[i];
-    data = item.data;
-
-    switch (data.type) {
-    case 'body':
-      Body.rotate(data, angle);
-      break;
-    }
-  }
-};
-
-var _setPaused = function(inspector, isPaused) {
-  if (isPaused) {
-    if (inspector.autoRewind && inspector.serializer) {
-      _setSelectedObjects(inspector, []);
-      Serializer.loadState(inspector.serializer, inspector.engine, 'pauseState');
-    }
-
-    inspector.engine.timing.timeScale = 0;
-    inspector.isPaused = true;
-    inspector.controls.pauseButton.text('Play');
-
-    Events.trigger(inspector, 'paused');
-  } else {
-    if (inspector.autoRewind && inspector.serializer) {
-      Serializer.saveState(inspector.serializer, inspector.engine, 'pauseState');
-    }
-
-    inspector.engine.timing.timeScale = 1;
-    inspector.isPaused = false;
-    inspector.controls.pauseButton.text('Pause');
-
-    Events.trigger(inspector, 'play');
-  }
-};
-
-var _setSelectedObjects = function(inspector, objects) {
-  var worldTree = inspector.controls.worldTree.data('jstree'),
-    data,
-    i;
-
-  for (i = 0; i < inspector.selected.length; i++) {
-    data = inspector.selected[i].data;
-    worldTree.deselect_node(data.type + '_' + data.id, true);
-  }
-
-  inspector.selected = [];
-
-  if (objects.length > 0) {
-    console.clear();
-  }
-
-  for (i = 0; i < objects.length; i++) {
-    data = objects[i];
-
-    if (data) {
-      // add the object to the selection
-      _addSelectedObject(inspector, data);
-
-      // log selected objects to console for property inspection
-      if (i < 5) {
-        console.log(data.label + ' ' + data.id + ': %O', data);
-      } else if (i === 6) {
-        console.warn('Omitted inspecting ' + (objects.length - 5) + ' more objects');
-      }
-    }
-  }
-};
-
-var _addSelectedObject = function(inspector, object) {
-  if (!object)
-    return;
-
-  var worldTree = inspector.controls.worldTree.data('jstree');
-  inspector.selected.push({ data: object });
-  worldTree.select_node(object.type + '_' + object.id, true);
-};
-
-var _updateTree = function(tree, data) {
-  data[0].state = data[0].state || { opened: true };
-  tree.settings.core.data = data;
-  tree.refresh(-1);
-};
-
-var _generateCompositeTreeNode = function(composite, compositeId, isRoot) {
-  var children = [],
-    node = {
-      id: 'composite_' + composite.id,
-      data: {
-        compositeId: compositeId,
-      },
-      type: 'composite',
-      text: (composite.label ? composite.label : 'Composite') + ' ' + composite.id,
-      'li_attr': {
-        'class': 'jstree-node-type-composite'
-      }
-    };
-
-  var childNode = _generateCompositesTreeNode(composite.composites, composite.id);
-  childNode.id = 'composites_' + composite.id;
-  children.push(childNode);
-
-  if (isRoot)
-    return childNode.children;
-
-  childNode = _generateBodiesTreeNode(composite.bodies, composite.id);
-  childNode.id = 'bodies_' + composite.id;
-  children.push(childNode);
-
-  childNode = _generateConstraintsTreeNode(composite.constraints, composite.id);
-  childNode.id = 'constraints_' + composite.id;
-  children.push(childNode);
-
-  node.children = children;
-
-  return node;
-};
-
-var _generateCompositesTreeNode = function(composites, compositeId) {
-  var node = {
-    type: 'composites',
-    text: 'Composites',
-    data: {
-      compositeId: compositeId,
-    },
-    children: [],
-    'li_attr': {
-      'class': 'jstree-node-type-composites'
-    }
-  };
-
-  for (var i = 0; i < composites.length; i++) {
-    var composite = composites[i];
-    node.children.push(_generateCompositeTreeNode(composite, compositeId));
-  }
-
-  return node;
-};
-
-var _generateBodiesTreeNode = function(bodies, compositeId) {
-  var node = {
-    type: 'bodies',
-    text: 'Bodies',
-    data: {
-      compositeId: compositeId,
-    },
-    children: [],
-    'li_attr': {
-      'class': 'jstree-node-type-bodies'
-    }
-  };
-
-  for (var i = 0; i < bodies.length; i++) {
-    var body = bodies[i];
-    node.children.push({
-      type: 'body',
-      id: 'body_' + body.id,
-      data: {
-        compositeId: compositeId,
-      },
-      text: (body.label ? body.label : 'Body') + ' ' + body.id,
-      'li_attr': {
-        'class': 'jstree-node-type-body'
-      }
-    });
-  }
-
-  return node;
-};
-
-var _generateConstraintsTreeNode = function(constraints, compositeId) {
-  var node = {
-    type: 'constraints',
-    text: 'Constraints',
-    data: {
-      compositeId: compositeId,
-    },
-    children: [],
-    'li_attr': {
-      'class': 'jstree-node-type-constraints'
-    }
-  };
-
-  for (var i = 0; i < constraints.length; i++) {
-    var constraint = constraints[i];
-    node.children.push({
-      type: 'constraint',
-      id: 'constraint_' + constraint.id,
-      data: {
-        compositeId: compositeId,
-      },
-      text: (constraint.label ? constraint.label : 'Constraint') + ' ' + constraint.id,
-      'li_attr': {
-        'class': 'jstree-node-type-constraint'
-      }
-    });
-  }
-
-  return node;
-};
-
-var _addNewComposite = function(inspector) {
-  var newComposite = Composite.create();
-
-  Composite.add(inspector.root, newComposite);
-
-  // move new composite to the start so that it appears top of tree
-  inspector.root.composites.splice(inspector.root.composites.length - 1, 1);
-  inspector.root.composites.unshift(newComposite);
-
-  Composite.setModified(inspector.engine.world, true, true, false);
-};
-
-var _exportFile = function(inspector) {
-  if (!inspector.serializer) {
-    alert('No serializer.');
-    return;
-  }
-
-  if (inspector.selected.length === 0) {
-    alert('No objects were selected, so export could not be created. Can only export objects that are in the World composite.');
-    return;
-  }
-
-  var fileName = 'export-objects',
-    exportComposite = Composite.create({
-      label: 'Exported Objects'
-    });
-
-  // add everything else, must be in top-down order
-  for (var i = 0; i < inspector.selected.length; i++) {
-    var object = inspector.selected[i].data;
-
-    // skip if it's already in the composite tree
-    // this means orphans will be added in the root
-    if (Composite.get(exportComposite, object.id, object.type))
-      continue;
-
-    Composite.add(exportComposite, object);
-
-    // better filename for small exports
-    if (inspector.selected.length === 1)
-      fileName = 'export-' + object.label + '-' + object.id;
-  }
-
-  // santise filename
-  fileName = fileName.toLowerCase().replace(/[^\w\-]/g, '') + '.json';
-
-  // serialise
-  var json = Serializer.serialise(inspector.serializer, exportComposite, inspector.exportIndent);
-
-  // launch export download
-  var _isWebkit = 'WebkitAppearance' in document.documentElement.style;
-
-  if (_isWebkit) {
-    var blob = new Blob([json], { type: 'application/json' }),
-      anchor = document.createElement('a');
-    anchor.download = fileName;
-    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
-    anchor.dataset.downloadurl = ['application/json', anchor.download, anchor.href].join(':');
-    anchor.click();
-  } else {
-    window.open('data:application/json;charset=utf-8,' + escape(json));
-  }
-
-  Events.trigger(inspector, 'export');
-};
-
-var _importFile = function(inspector) {
-  if (!inspector.serializer) {
-    alert('No serializer.');
-    return;
-  }
-
-  var element = document.createElement('div'),
-    fileInput;
-
-  element.innerHTML = '<input type="file">';
-  fileInput = element.firstChild;
-
-  fileInput.addEventListener('change', function() {
-    var file = fileInput.files[0];
-
-    if (file.name.match(/\.(txt|json)$/)) {
-      var reader = new FileReader();
-
-      reader.onload = function() {
-        var importedComposite = inspector.serializer.parse(reader.result);
-
-        if (importedComposite) {
-          importedComposite.label = 'Imported Objects';
-
-          Composite.rebase(importedComposite);
-          Composite.add(inspector.root, importedComposite);
-
-          // move imported composite to the start so that it appears top of tree
-          inspector.root.composites.splice(inspector.root.composites.length - 1, 1);
-          inspector.root.composites.unshift(importedComposite);
-
-          var worldTree = inspector.controls.worldTree.data('jstree'),
-            data = _generateCompositeTreeNode(inspector.root, null, true);
-          _updateTree(worldTree, data);
+        if (updateRequired) {
+            Inspector.$body.removeClass(classNames);
+            inspector.bodyClass = ' ' + Inspector.$body.attr('class');
         }
-      };
-
-      reader.readAsText(file);  
-    } else {
-      alert('File not supported, .json or .txt JSON files only');
     }
-  });
+    static _getMousePosition(inspector) {
+        return Matter.Vector.add(inspector.mouse.position, inspector.offset);
+    }
+    static _initEngineEvents(inspector) {
+        const engine = inspector.engine;
+        const mouse = inspector.mouse;
+        const controls = inspector.controls;
+        let mousePosition = Inspector._getMousePosition(inspector);
+        inspector.beforeEngineUpdate = function () {
+            // update mouse position reference
+            mousePosition = Inspector._getMousePosition(inspector);
+            const mouseDelta = mousePosition.x - inspector.mousePrevPosition.x;
+            const keyDelta = Number(keymaster_1.default.isPressed('up')) +
+                Number(keymaster_1.default.isPressed('right')) -
+                Number(keymaster_1.default.isPressed('down')) -
+                Number(keymaster_1.default.isPressed('left'));
+            const delta = mouseDelta + keyDelta;
+            // update interface when world changes
+            if (engine.world.isModified) {
+                const data = Inspector._generateCompositeTreeNode(inspector.root, null, true);
+                Inspector._updateTree(controls.worldTree.data('jstree'), data);
+                Inspector._setSelectedObjects(inspector, []);
+            }
+            // update region selection
+            if (inspector.selectStart !== null) {
+                if (inspector.selectEnd === null) {
+                    inspector.selectEnd = {};
+                }
+                inspector.selectEnd.x = mousePosition.x;
+                inspector.selectEnd.y = mousePosition.y;
+                Matter.Bounds.update(inspector.selectBounds, [
+                    inspector.selectStart,
+                    inspector.selectEnd,
+                ]);
+            }
+            // rotate mode
+            if (keymaster_1.default.shift && keymaster_1.default.isPressed('r')) {
+                const rotateSpeed = 0.03;
+                const angle = Math.max(-2, Math.min(2, delta)) * rotateSpeed;
+                Inspector._addBodyClass(inspector, 'ins-cursor-rotate');
+                Inspector._rotateSelectedObjects(inspector, angle);
+            }
+            else {
+                Inspector._removeBodyClass(inspector, 'ins-cursor-rotate');
+            }
+            // scale mode
+            if (keymaster_1.default.shift && keymaster_1.default.isPressed('s')) {
+                const scaleSpeed = 0.02;
+                const scale = 1 + Math.max(-2, Math.min(2, delta)) * scaleSpeed;
+                Inspector._addBodyClass(inspector, 'ins-cursor-scale');
+                let scaleX;
+                let scaleY;
+                if (keymaster_1.default.isPressed('d')) {
+                    scaleX = scale;
+                    scaleY = 1;
+                }
+                else if (keymaster_1.default.isPressed('f')) {
+                    scaleX = 1;
+                    scaleY = scale;
+                }
+                else {
+                    scaleX = scaleY = scale;
+                }
+                Inspector._scaleSelectedObjects(inspector, scaleX, scaleY);
+            }
+            else {
+                Inspector._removeBodyClass(inspector, 'ins-cursor-scale');
+            }
+            // translate mode
+            if (mouse.button === 2) {
+                Inspector._addBodyClass(inspector, 'ins-cursor-move');
+                Inspector._moveSelectedObjects(inspector, mousePosition.x, mousePosition.y);
+            }
+            else {
+                Inspector._removeBodyClass(inspector, 'ins-cursor-move');
+            }
+            inspector.mousePrevPosition = Matter.Common.clone(mousePosition);
+        };
+        Matter.Events.on(inspector.engine, 'beforeUpdate', inspector.beforeEngineUpdate);
+        if (inspector.mouseConstraint) {
+            Matter.Events.on(inspector.mouseConstraint, 'mouseup', function () {
+                // select objects in region if making a region selection
+                if (inspector.selectStart !== null) {
+                    const selected = Matter.Query.region(Matter.Composite.allBodies(engine.world), inspector.selectBounds);
+                    Inspector._setSelectedObjects(inspector, selected);
+                }
+                // clear selection region
+                inspector.selectStart = null;
+                inspector.selectEnd = null;
+                Matter.Events.trigger(inspector, 'selectEnd');
+            });
+            Matter.Events.on(inspector.mouseConstraint, 'mousedown', function () {
+                const bodies = Matter.Composite.allBodies(engine.world);
+                const constraints = Matter.Composite.allConstraints(engine.world);
+                const isUnionSelect = keymaster_1.default.shift || keymaster_1.default.control;
+                const worldTree = inspector.controls.worldTree.data('jstree');
+                if (mouse.button === 2) {
+                    let hasSelected = false;
+                    for (const body of bodies) {
+                        if (Matter.Bounds.contains(body.bounds, mousePosition) &&
+                            Matter.Vertices.contains(body.vertices, mousePosition)) {
+                            if (isUnionSelect) {
+                                Inspector._addSelectedObject(inspector, body);
+                            }
+                            else {
+                                Inspector._setSelectedObjects(inspector, [body]);
+                            }
+                            hasSelected = true;
+                            break;
+                        }
+                    }
+                    if (!hasSelected) {
+                        for (const constraint of constraints) {
+                            const bodyA = constraint.bodyA;
+                            const bodyB = constraint.bodyB;
+                            if (constraint.label.indexOf('Mouse Constraint') !== -1) {
+                                continue;
+                            }
+                            let pointAWorld = constraint.pointA, pointBWorld = constraint.pointB;
+                            if (bodyA) {
+                                pointAWorld = Matter.Vector.add(bodyA.position, constraint.pointA);
+                            }
+                            if (bodyB) {
+                                pointBWorld = Matter.Vector.add(bodyB.position, constraint.pointB);
+                            }
+                            if (!pointAWorld || !pointBWorld) {
+                                continue;
+                            }
+                            const distA = Matter.Vector.magnitudeSquared(Matter.Vector.sub(mousePosition, pointAWorld));
+                            const distB = Matter.Vector.magnitudeSquared(Matter.Vector.sub(mousePosition, pointBWorld));
+                            if (distA < 100 || distB < 100) {
+                                if (isUnionSelect) {
+                                    Inspector._addSelectedObject(inspector, constraint);
+                                }
+                                else {
+                                    Inspector._setSelectedObjects(inspector, [constraint]);
+                                }
+                                hasSelected = true;
+                                break;
+                            }
+                        }
+                        if (!hasSelected) {
+                            worldTree.deselect_all(true);
+                            Inspector._setSelectedObjects(inspector, []);
+                            inspector.selectStart = Matter.Common.clone(mousePosition);
+                            inspector.selectEnd = Matter.Common.clone(mousePosition);
+                            Matter.Bounds.update(inspector.selectBounds, [
+                                inspector.selectStart,
+                                inspector.selectEnd,
+                            ]);
+                            Matter.Events.trigger(inspector, 'selectStart');
+                        }
+                        else {
+                            inspector.selectStart = null;
+                            inspector.selectEnd = null;
+                        }
+                    }
+                }
+                if (mouse.button === 2 && inspector.selected.length > 0) {
+                    Inspector._addBodyClass(inspector, 'ins-cursor-move');
+                    Inspector._updateSelectedMouseDownOffset(inspector);
+                }
+            });
+        }
+        if (inspector.render) {
+            inspector.afterRender = function () {
+                const renderController = inspector.render.controller;
+                const context = inspector.render.context;
+                if ('inspector' in renderController)
+                    renderController.inspector(inspector, context);
+            };
+            Matter.Events.on(inspector.render, 'afterRender', inspector.afterRender);
+        }
+    }
+    static _deleteSelectedObjects(inspector) {
+        const objects = [];
+        const worldTree = inspector.controls.worldTree.data('jstree');
+        // delete objects in world
+        for (let i = 0; i < inspector.selected.length; i++) {
+            const object = inspector.selected[i].data;
+            if (object !== inspector.engine.world) {
+                objects.push(object);
+            }
+        }
+        // also delete non-world composites (selected only in the UI tree)
+        const selectedNodes = worldTree.get_selected();
+        for (let i = 0; i < selectedNodes.length; i++) {
+            let node = worldTree.get_node(selectedNodes[i]);
+            if (node.type === 'composite') {
+                node = worldTree.get_node(node.children[0]);
+                if (node.data) {
+                    const compositeId = node.data.compositeId;
+                    const object = Matter.Composite.get(inspector.root, compositeId, 'composite');
+                    if (object && object !== inspector.engine.world) {
+                        objects.push(object);
+                        worldTree.delete_node(selectedNodes[i]);
+                    }
+                }
+            }
+        }
+        Matter.Composite.remove(inspector.root, objects, true);
+        Inspector._setSelectedObjects(inspector, []);
+    }
+    static _copySelectedObjects(inspector) {
+        inspector.clipboard.length = 0;
+        // put selected objects into clipboard
+        for (let i = 0; i < inspector.selected.length; i++) {
+            const object = inspector.selected[i].data;
+            if (object.type !== 'body') {
+                continue;
+            }
+            inspector.clipboard.push(object);
+        }
+    }
+    static _pasteSelectedObjects(inspector) {
+        if (!inspector.serializer) {
+            return;
+        }
+        const objects = [];
+        const worldTree = inspector.controls.worldTree.data('jstree');
+        // copy objects in world
+        for (let i = 0; i < inspector.clipboard.length; i++) {
+            const object = inspector.clipboard[i];
+            const clone = Serializer_1.default.clone(inspector.serializer, object);
+            Matter.Body.translate(clone, { x: 50, y: 50 });
+            // add the clone to the same composite as original
+            const node = worldTree.get_node(object.type + '_' + object.id, false);
+            const compositeId = node.data.compositeId;
+            const composite = Matter.Composite.get(inspector.engine.world, compositeId, 'composite');
+            Matter.Composite.add(composite, clone);
+            objects.push(clone);
+        }
+        // select clones after waiting for tree to update
+        setTimeout(function () {
+            Inspector._setSelectedObjects(inspector, objects);
+        }, 200);
+    }
+    static _updateSelectedMouseDownOffset(inspector) {
+        const selected = inspector.selected;
+        const mousePosition = Inspector._getMousePosition(inspector);
+        for (const item of selected) {
+            const data = item.data;
+            if ('position' in data) {
+                item.mousedownOffset = {
+                    x: mousePosition.x - data.position.x,
+                    y: mousePosition.y - data.position.y,
+                };
+            }
+            else if ('pointA' in data && !data.bodyA) {
+                item.mousedownOffset = {
+                    x: mousePosition.x - data.pointA.x,
+                    y: mousePosition.y - data.pointA.y,
+                };
+            }
+            else if ('pointB' in data && !data.bodyB) {
+                item.mousedownOffset = {
+                    x: mousePosition.x - data.pointB.x,
+                    y: mousePosition.y - data.pointB.y,
+                };
+            }
+        }
+    }
+    static _moveSelectedObjects(inspector, x, y) {
+        const selected = inspector.selected;
+        for (const item of selected) {
+            const data = item.data;
+            if (!item.mousedownOffset) {
+                continue;
+            }
+            switch (data.type) {
+                case 'body':
+                    const delta = {
+                        x: x - data.position.x - item.mousedownOffset.x,
+                        y: y - data.position.y - item.mousedownOffset.y,
+                    };
+                    Matter.Body.translate(data, delta);
+                    data.positionPrev.x = data.position.x;
+                    data.positionPrev.y = data.position.y;
+                    break;
+                case 'constraint':
+                    let point = data.pointA;
+                    if (data.bodyA) {
+                        point = data.pointB;
+                    }
+                    point.x = x - item.mousedownOffset.x;
+                    point.y = y - item.mousedownOffset.y;
+                    const initialPointA = data.bodyA
+                        ? Matter.Vector.add(data.bodyA.position, data.pointA)
+                        : data.pointA;
+                    const initialPointB = data.bodyB
+                        ? Matter.Vector.add(data.bodyB.position, data.pointB)
+                        : data.pointB;
+                    data.length = Matter.Vector.magnitude(Matter.Vector.sub(initialPointA, initialPointB));
+                    break;
+            }
+        }
+    }
+    static _scaleSelectedObjects(inspector, scaleX, scaleY) {
+        const selected = inspector.selected;
+        for (const item of selected) {
+            const data = item.data;
+            switch (data.type) {
+                case 'body':
+                    Matter.Body.scale(data, scaleX, scaleY, data.position);
+                    if (data.circleRadius) {
+                        data.circleRadius *= scaleX;
+                    }
+                    break;
+            }
+        }
+    }
+    static _rotateSelectedObjects(inspector, angle) {
+        const selected = inspector.selected;
+        for (const item of selected) {
+            const data = item.data;
+            switch (data.type) {
+                case 'body':
+                    Matter.Body.rotate(data, angle);
+                    break;
+            }
+        }
+    }
+    static _setPaused(inspector, isPaused) {
+        if (isPaused) {
+            if (inspector.autoRewind && inspector.serializer) {
+                Inspector._setSelectedObjects(inspector, []);
+                Serializer_1.default.loadState(inspector.serializer, inspector.engine, 'pauseState');
+            }
+            inspector.engine.timing.timeScale = 0;
+            inspector.isPaused = true;
+            inspector.controls.pauseButton.text('Play');
+            Matter.Events.trigger(inspector, 'paused');
+        }
+        else {
+            if (inspector.autoRewind && inspector.serializer) {
+                Serializer_1.default.saveState(inspector.serializer, inspector.engine, 'pauseState');
+            }
+            inspector.engine.timing.timeScale = 1;
+            inspector.isPaused = false;
+            inspector.controls.pauseButton.text('Pause');
+            Matter.Events.trigger(inspector, 'play');
+        }
+    }
+    static _setSelectedObjects(inspector, objects) {
+        const worldTree = inspector.controls.worldTree.data('jstree');
+        for (let i = 0; i < inspector.selected.length; i++) {
+            const data = inspector.selected[i].data;
+            worldTree.deselect_node(data.type + '_' + data.id, true);
+        }
+        inspector.selected = [];
+        if (objects.length > 0) {
+            console.clear();
+        }
+        for (let i = 0; i < objects.length; i++) {
+            const data = objects[i];
+            if (data) {
+                // add the object to the selection
+                Inspector._addSelectedObject(inspector, data);
+                // log selected objects to console for property inspection
+                if (i < 5) {
+                    console.log(data.label + ' ' + data.id + ': %O', data);
+                }
+                else if (i === 6) {
+                    console.warn('Omitted inspecting ' + (objects.length - 5) + ' more objects');
+                }
+            }
+        }
+    }
+    static _addSelectedObject(inspector, object) {
+        if (!object) {
+            return;
+        }
+        const worldTree = inspector.controls.worldTree.data('jstree');
+        inspector.selected.push({ data: object });
+        worldTree.select_node(object.type + '_' + object.id, true);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static _updateTree(tree, data) {
+        data[0].state = data[0].state || { opened: true };
+        tree.settings.core.data = data;
+        tree.refresh(-1);
+    }
+    static _generateCompositeTreeNode(composite, compositeId, isRoot) {
+        const children = [];
+        const node = {
+            id: 'composite_' + composite.id,
+            data: {
+                compositeId: compositeId,
+            },
+            type: 'composite',
+            text: (composite.label ? composite.label : 'Composite') + ' ' + composite.id,
+            li_attr: {
+                class: 'jstree-node-type-composite',
+            },
+            children: [],
+        };
+        let childNode = Inspector._generateCompositesTreeNode(composite.composites, composite.id);
+        childNode.id = 'composites_' + composite.id;
+        children.push(childNode);
+        if (isRoot) {
+            return childNode.children;
+        }
+        childNode = Inspector._generateBodiesTreeNode(composite.bodies, composite.id);
+        childNode.id = 'bodies_' + composite.id;
+        children.push(childNode);
+        childNode = Inspector._generateConstraintsTreeNode(composite.constraints, composite.id);
+        childNode.id = 'constraints_' + composite.id;
+        children.push(childNode);
+        node.children = children;
+        return node;
+    }
+    static _generateCompositesTreeNode(composites, compositeId) {
+        const node = {
+            type: 'composites',
+            text: 'Composites',
+            data: {
+                compositeId: compositeId,
+            },
+            children: [],
+            li_attr: {
+                class: 'jstree-node-type-composites',
+            },
+        };
+        for (const composite of composites) {
+            node.children.push(Inspector._generateCompositeTreeNode(composite, compositeId));
+        }
+        return node;
+    }
+    static _generateBodiesTreeNode(bodies, compositeId) {
+        const node = {
+            type: 'bodies',
+            text: 'Bodies',
+            data: {
+                compositeId: compositeId,
+            },
+            children: [],
+            li_attr: {
+                class: 'jstree-node-type-bodies',
+            },
+        };
+        for (const body of bodies) {
+            node.children.push({
+                type: 'body',
+                id: 'body_' + body.id,
+                data: {
+                    compositeId: compositeId,
+                },
+                text: (body.label ? body.label : 'Body') + ' ' + body.id,
+                li_attr: {
+                    class: 'jstree-node-type-body',
+                },
+                children: [],
+            });
+        }
+        return node;
+    }
+    static _generateConstraintsTreeNode(constraints, compositeId) {
+        const node = {
+            type: 'constraints',
+            text: 'Constraints',
+            data: {
+                compositeId: compositeId,
+            },
+            children: [],
+            li_attr: {
+                class: 'jstree-node-type-constraints',
+            },
+        };
+        for (const constraint of constraints) {
+            node.children.push({
+                type: 'constraint',
+                id: 'constraint_' + constraint.id,
+                data: {
+                    compositeId: compositeId,
+                },
+                text: (constraint.label ? constraint.label : 'Constraint') +
+                    ' ' +
+                    constraint.id,
+                li_attr: {
+                    class: 'jstree-node-type-constraint',
+                },
+                children: [],
+            });
+        }
+        return node;
+    }
+    static _addNewComposite(inspector) {
+        const newComposite = Matter.Composite.create();
+        Matter.Composite.add(inspector.root, newComposite);
+        // move new composite to the start so that it appears top of tree
+        inspector.root.composites.splice(inspector.root.composites.length - 1, 1);
+        inspector.root.composites.unshift(newComposite);
+        Matter.Composite.setModified(inspector.engine.world, true, true, false);
+    }
+    static _exportFile(inspector) {
+        if (!inspector.serializer) {
+            alert('No serializer.');
+            return;
+        }
+        if (inspector.selected.length === 0) {
+            alert('No objects were selected, so export could not be created. Can only export objects that are in the World composite.');
+            return;
+        }
+        let fileName = 'export-objects';
+        const exportComposite = Matter.Composite.create({
+            label: 'Exported Objects',
+        });
+        // add everything else, must be in top-down order
+        for (let i = 0; i < inspector.selected.length; i++) {
+            const object = inspector.selected[i].data;
+            // skip if it's already in the composite tree
+            // this means orphans will be added in the root
+            if (Matter.Composite.get(exportComposite, object.id, object.type)) {
+                continue;
+            }
+            Matter.Composite.add(exportComposite, object);
+            // better filename for small exports
+            if (inspector.selected.length === 1)
+                fileName = 'export-' + object.label + '-' + object.id;
+        }
+        // santise filename
+        // eslint-disable-next-line no-useless-escape
+        fileName = fileName.toLowerCase().replace(/[^\w\-]/g, '') + '.json';
+        // serialise
+        const json = Serializer_1.default.serialise(inspector.serializer, exportComposite, inspector.exportIndent);
+        // launch export download
+        const _isWebkit = 'WebkitAppearance' in document.documentElement.style;
+        if (_isWebkit) {
+            const blob = new Blob([json], { type: 'application/json' });
+            const anchor = document.createElement('a');
+            anchor.download = fileName;
+            anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+            anchor.dataset.downloadurl = [
+                'application/json',
+                anchor.download,
+                anchor.href,
+            ].join(':');
+            anchor.click();
+        }
+        else {
+            window.open('data:application/json;charset=utf-8,' + escape(json));
+        }
+        Matter.Events.trigger(inspector, 'export');
+    }
+    static _importFile(inspector) {
+        if (!inspector.serializer) {
+            alert('No serializer.');
+            return;
+        }
+        const element = document.createElement('div');
+        element.innerHTML = '<input type="file">';
+        const fileInput = element.firstChild;
+        fileInput === null || fileInput === void 0 ? void 0 : fileInput.addEventListener('change', function () {
+            // @ts-ignore
+            const file = fileInput.files[0];
+            if (file.name.match(/\.(txt|json)$/)) {
+                const reader = new FileReader();
+                reader.onload = function () {
+                    // @ts-ignore
+                    const importedComposite = inspector.serializer.parse(reader.result);
+                    if (importedComposite) {
+                        importedComposite.label = 'Imported Objects';
+                        Matter.Composite.rebase(importedComposite);
+                        Matter.Composite.add(inspector.root, importedComposite);
+                        // move imported composite to the start so that it appears top of tree
+                        inspector.root.composites.splice(inspector.root.composites.length - 1, 1);
+                        inspector.root.composites.unshift(importedComposite);
+                        const worldTree = inspector.controls.worldTree.data('jstree');
+                        const data = Inspector._generateCompositeTreeNode(inspector.root, null, true);
+                        Inspector._updateTree(worldTree, data);
+                    }
+                };
+                reader.readAsText(file);
+            }
+            else {
+                alert('File not supported, .json or .txt JSON files only');
+            }
+        });
+        // @ts-ignore
+        fileInput === null || fileInput === void 0 ? void 0 : fileInput.click();
+    }
+}
+exports["default"] = Inspector;
 
-  fileInput.click();
-};
-
-/*
-*
-*  Events Documentation
-*
-*/
-
-/**
-* Fired after the inspector's import button pressed
-*
-* @event export
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
-
-/**
-* Fired after the inspector's export button pressed
-*
-* @event import
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
-
-/**
-* Fired after the inspector user starts making a selection
-*
-* @event selectStart
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
-
-/**
-* Fired after the inspector user ends making a selection
-*
-* @event selectEnd
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
-
-/**
-* Fired after the inspector is paused
-*
-* @event pause
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
-
-/**
-* Fired after the inspector is played
-*
-* @event play
-* @param {} event An event object
-* @param {} event.source The source object of the event
-* @param {} event.name The name of the event
-*/
 
 /***/ }),
 
-/***/ 367:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+/***/ 954:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ResurrectExtend = void 0;
+const resurrect_1 = __importDefault(__webpack_require__(332));
+const MatterTypes = __importStar(__webpack_require__(381));
+const Matter = MatterTypes.default;
+class ResurrectExtend extends resurrect_1.default {
+    constructor() {
+        super(...arguments);
+        this.parse = () => { };
+    }
+}
+exports.ResurrectExtend = ResurrectExtend;
 /**
  * An (experimental) tool for serializing matter.js worlds.
  * @module Serializer
  */
-
-const Serializer = module.exports = {};
-
-const Resurrect = __webpack_require__(378);
-
-const Matter = __webpack_require__(759);
-const Common = Matter.Common;
-const Engine = Matter.Engine;
-
-/**
- * Creates a serializer.
- * @function Serializer.create
- * @return {} A serializer
- */
-Serializer.create = function() {
-  let serializer = new Resurrect({ prefix: '$', cleanup: true });
-  serializer.parse = serializer.resurrect;
-  return serializer;
-};
-
-/**
- * Clones an object using a serializer and assigns it a new id
- * @function Serializer.clone
- * @param {object} serializer
- * @param {object} object
- * @return {} The clone
- */
-Serializer.clone = function(serializer, object) {
-  var clone = serializer.parse(Serializer.serialise(serializer, object));
-  clone.id = Common.nextId();
-  return clone;
-};
-
-/**
- * Saves world state to local storage
- * @function Serializer.saveState
- * @param {object} serializer
- * @param {engine} engine
- * @param {string} key
- */
-Serializer.saveState = function(serializer, engine, key) {
-  localStorage.setItem(key, Serializer.serialise(serializer, engine.world));
-};
-
-/**
- * Loads world state from local storage
- * @function Serializer.loadState
- * @param {object} serializer
- * @param {engine} engine
- * @param {string} key
- */
-Serializer.loadState = function(serializer, engine, key) {
-  var loadedWorld = serializer.parse(localStorage.getItem(key));
-
-  if (loadedWorld) {
-    Engine.merge(engine, { world: loadedWorld });
-  }
-};
-
-/**
- * Serialises the object using the given serializer and a Matter-specific replacer
- * @function Serializer.serialise
- * @param {object} serializer
- * @param {object} object
- * @param {number} indent
- * @return {string} The serialised object
- */
-Serializer.serialise = function(serializer, object, indent) {
-  indent = indent || 0;
-
-  return serializer.stringify(object, function(key, value) {
-    // limit precision of floats
-    if (!/^#/.exec(key) && typeof value === 'number') {
-      var fixed = parseFloat(value.toFixed(3));
-
-      // do not limit if limiting will cause value to zero
-      // TODO: this should ideally dynamically find the SF precision required
-      if (fixed === 0 && value !== 0)
-        return value;
-
-      return fixed;
+class Serializer {
+    /**
+     * Creates a serializer.
+     * @return A serializer
+     */
+    static create() {
+        const serializer = new ResurrectExtend({ prefix: '$', cleanup: true });
+        serializer.parse = serializer.resurrect;
+        return serializer;
     }
+    /**
+     * Clones an object using a serializer and assigns it a new id
+     * @function Serializer.clone
+     * @param serializer
+     * @param object
+     * @return The clone
+     */
+    static clone(serializer, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    object) {
+        const clone = serializer.parse(Serializer.serialise(serializer, object));
+        clone.id = Matter.Common.nextId();
+        return clone;
+    }
+    /**
+     * Saves world state to local storage
+     * @function Serializer.saveState
+     * @param serializer
+     * @param engine
+     * @param key
+     */
+    static saveState(serializer, engine, key) {
+        localStorage.setItem(key, Serializer.serialise(serializer, engine.world));
+    }
+    /**
+     * Loads world state from local storage
+     * @function Serializer.loadState
+     * @param serializer
+     * @param engine
+     * @param key
+     */
+    static loadState(serializer, engine, key) {
+        const item = localStorage.getItem(key);
+        if (!item) {
+            return;
+        }
+        const loadedWorld = serializer.parse(item);
+        if (loadedWorld) {
+            Matter.Engine.merge(engine, {
+                world: loadedWorld,
+            });
+        }
+    }
+    /**
+     * Serialises the object using the given serializer and a Matter-specific replacer
+     * @function Serializer.serialise
+     * @param serializer
+     * @param object
+     * @param indent
+     * @return The serialised object
+     */
+    static serialise(serializer, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    object, indent = 0) {
+        return serializer.stringify(object, 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (key, value) => {
+            // limit precision of floats
+            if (!/^#/.exec(key) && typeof value === 'number') {
+                const fixed = parseFloat(value.toFixed(3));
+                // do not limit if limiting will cause value to zero
+                // TODO: this should ideally dynamically find the SF precision required
+                if (fixed === 0 && value !== 0) {
+                    return value;
+                }
+                return fixed;
+            }
+            return value;
+        }, indent);
+    }
+}
+exports["default"] = Serializer;
 
-    return value;
-  }, indent);
-};
 
 /***/ }),
 
-/***/ 759:
+/***/ 381:
 /***/ ((module) => {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__759__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__381__;
 
 /***/ })
 
@@ -3202,7 +2996,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__759__;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__(138);
+/******/ 	var __webpack_exports__ = __webpack_require__(79);
 /******/ 	
 /******/ 	return __webpack_exports__;
 /******/ })()

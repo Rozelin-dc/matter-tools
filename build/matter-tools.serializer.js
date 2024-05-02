@@ -1,22 +1,25 @@
 /*!
- * matter-tools 0.14.0 by @liabru
- * https://github.com/liabru/matter-tools
+ * @rozelin/matter-tools 1.0.0 by @Rozelin
+ * https://github.com/Rozelin-dc/matter-tools
  * License MIT
- * 
+ *
  * The MIT License (MIT)
- * 
- * Copyright (c) 2014 Liam Brummitt
- * 
+ *
+ * Copyright (c) Rozelin.
+ *
+ * This software is a modified version of the original software licensed under
+ * the MIT License. Original copyright (c) Liam Brummitt. All rights reserved.
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,214 +27,27 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("matter-js"));
+		module.exports = factory(require("@rozelin/matter-ts"));
 	else if(typeof define === 'function' && define.amd)
-		define("Serializer", ["matter-js"], factory);
+		define("MatterTools", ["@rozelin/matter-ts"], factory);
 	else if(typeof exports === 'object')
-		exports["Serializer"] = factory(require("matter-js"));
+		exports["MatterTools"] = factory(require("@rozelin/matter-ts"));
 	else
 		root["MatterTools"] = root["MatterTools"] || {}, root["MatterTools"]["Serializer"] = factory(root["Matter"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE__0__) {
-return /******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-/******/
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-/******/
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-/******/
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/
-/******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-/******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-/******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
-/******/ 		}
-/******/ 	};
-/******/
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
-/******/ 	};
-/******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-/******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/demo/lib/";
-/******/
-/******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 16);
-/******/ })
-/************************************************************************/
-/******/ ({
+})(this, (__WEBPACK_EXTERNAL_MODULE__381__) => {
+return /******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
 
-/***/ 0:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__0__;
-
-/***/ }),
-
-/***/ 16:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
+/***/ 332:
+/***/ ((__unused_webpack_module, exports) => {
 
 
-/**
- * An (experimental) tool for serializing matter.js worlds.
- * @module Serializer
- */
-
-const Serializer = module.exports = {};
-
-const Resurrect = __webpack_require__(17);
-
-const Matter = __webpack_require__(0);
-const Common = Matter.Common;
-const Engine = Matter.Engine;
-
-/**
- * Creates a serializer.
- * @function Serializer.create
- * @return {} A serializer
- */
-Serializer.create = function() {
-  let serializer = new Resurrect({ prefix: '$', cleanup: true });
-  serializer.parse = serializer.resurrect;
-  return serializer;
-};
-
-/**
- * Clones an object using a serializer and assigns it a new id
- * @function Serializer.clone
- * @param {object} serializer
- * @param {object} object
- * @return {} The clone
- */
-Serializer.clone = function(serializer, object) {
-  var clone = serializer.parse(Serializer.serialise(serializer, object));
-  clone.id = Common.nextId();
-  return clone;
-};
-
-/**
- * Saves world state to local storage
- * @function Serializer.saveState
- * @param {object} serializer
- * @param {engine} engine
- * @param {string} key
- */
-Serializer.saveState = function(serializer, engine, key) {
-  localStorage.setItem(key, Serializer.serialise(serializer, engine.world));
-};
-
-/**
- * Loads world state from local storage
- * @function Serializer.loadState
- * @param {object} serializer
- * @param {engine} engine
- * @param {string} key
- */
-Serializer.loadState = function(serializer, engine, key) {
-  var loadedWorld = serializer.parse(localStorage.getItem(key));
-
-  if (loadedWorld) {
-    Engine.merge(engine, { world: loadedWorld });
-  }
-};
-
-/**
- * Serialises the object using the given serializer and a Matter-specific replacer
- * @function Serializer.serialise
- * @param {object} serializer
- * @param {object} object
- * @param {number} indent
- * @return {string} The serialised object
- */
-Serializer.serialise = function(serializer, object, indent) {
-  indent = indent || 0;
-
-  return serializer.stringify(object, function(key, value) {
-    // limit precision of floats
-    if (!/^#/.exec(key) && typeof value === 'number') {
-      var fixed = parseFloat(value.toFixed(3));
-
-      // do not limit if limiting will cause value to zero
-      // TODO: this should ideally dynamically find the SF precision required
-      if (fixed === 0 && value !== 0)
-        return value;
-
-      return fixed;
-    }
-
-    return value;
-  }, indent);
-};
-
-/***/ }),
-
-/***/ 17:
-/***/ (function(module, exports) {
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * # ResurrectJS
  * @version 1.0.3
@@ -314,138 +130,449 @@ Serializer.serialise = function(serializer, object, indent) {
  *
  * @see http://nullprogram.com/blog/2013/03/28/
  */
-
-/**
- * @param {Object} [options] See options documentation.
- * @namespace
- * @constructor
- */
-function Resurrect(options) {
-    this.table = null;
-    this.prefix = '#';
-    this.cleanup = false;
-    this.revive = true;
-    for (var option in options) {
-        if (options.hasOwnProperty(option)) {
-            this[option] = options[option];
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+class ResurrectError extends Error {
+    constructor(message) {
+        super(message);
+        this.message = message || '';
+        this.stack = new Error().stack;
+    }
+}
+_a = ResurrectError;
+(() => {
+    _a.prototype.name = 'ResurrectError';
+})();
+class NamespaceResolver {
+    /**
+     * Resolves prototypes through the properties on an object and
+     * constructor names.
+     * @param scope
+     */
+    constructor(scope) {
+        this.scope = scope;
+    }
+    /**
+     * Gets the prototype of the given property name from an object. If
+     * not found, it throws an error.
+     * @param name
+     */
+    getPrototype(name) {
+        const constructor = this.scope[name];
+        if (constructor) {
+            return constructor.prototype;
+        }
+        else {
+            throw new Resurrect.prototype.Error('Unknown constructor: ' + name);
         }
     }
-    this.refcode = this.prefix + 'id';
-    this.origcode = this.prefix + 'original';
-    this.buildcode = this.prefix + '.';
-    this.valuecode = this.prefix + 'v';
+    /**
+     * Get the prototype name for an object, to be fetched later with getPrototype.
+     * @param object
+     * @returns Null if the constructor is Object.\
+     */
+    getName(object) {
+        let constructor = object.constructor.name;
+        if (constructor == null) {
+            // IE
+            const funcPattern = /^\s*function\s*([A-Za-z0-9_$]*)/;
+            constructor = funcPattern.exec(object.constructor)
+                ? funcPattern.exec(object.constructor)[1]
+                : null;
+        }
+        if (constructor === '') {
+            const msg = "Can't serialize objects with anonymous constructors.";
+            throw new Resurrect.prototype.Error(msg);
+        }
+        else if (constructor === 'Object' || constructor === 'Array') {
+            return null;
+        }
+        else {
+            return constructor;
+        }
+    }
 }
-
-module.exports = Resurrect;
-
+class Resurrect {
+    constructor(options = {}) {
+        this.Error = ResurrectError;
+        this.resolver = new Resurrect.NamespaceResolver(Resurrect.GLOBAL);
+        this.table = null;
+        this.prefix = '#';
+        this.cleanup = false;
+        this.revive = true;
+        for (const option in options) {
+            if (Object.prototype.hasOwnProperty.call(options, option)) {
+                // @ts-ignore
+                this[option] = options[option];
+            }
+        }
+        this.refcode = this.prefix + 'id';
+        this.origcode = this.prefix + 'original';
+        this.buildcode = this.prefix + '.';
+        this.valuecode = this.prefix + 'v';
+    }
+    /**
+     * Escape special regular expression characters in a string.
+     * @param string
+     * @returns The string escaped for exact matches.
+     * @see http://stackoverflow.com/a/6969486
+     */
+    static escapeRegExp(string) {
+        // eslint-disable-next-line no-useless-escape
+        return string.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
+    }
+    /**
+     * Create a DOM node from HTML source; behaves like a constructor.
+     * @param html
+     */
+    static Node(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.firstChild;
+    }
+    /**
+     * @param type
+     * @returns A function that tests for type.
+     */
+    static is(type) {
+        const string = '[object ' + type + ']';
+        return (object) => {
+            return Object.prototype.toString.call(object) === string;
+        };
+    }
+    static isArray(object) {
+        const checker = Resurrect.is('Array');
+        return checker(object);
+    }
+    static isAtom(object) {
+        return !Resurrect.isObject(object) && !Resurrect.isArray(object);
+    }
+    /**
+     * @param object
+     * @returns True if object is a primitive or a primitive wrapper.
+     */
+    static isPrimitive(object) {
+        return (object == null ||
+            Resurrect.isNumber(object) ||
+            Resurrect.isString(object) ||
+            Resurrect.isBoolean(object));
+    }
+    /**
+     * Create a reference (encoding) to an object.
+     * @param object
+     */
+    ref(object) {
+        const ref = {};
+        if (!object) {
+            ref[this.prefix] = -1;
+        }
+        else {
+            ref[this.prefix] = object[this.refcode];
+        }
+        return ref;
+    }
+    /**
+     * Lookup an object in the table by reference object.
+     * @param ref
+     */
+    deref(ref) {
+        if (!this.table) {
+            return undefined;
+        }
+        return this.table[ref[this.prefix]];
+    }
+    /**
+     * Put a temporary identifier on an object and store it in the table.
+     * @param object
+     * @returns The unique identifier number.
+     */
+    tag(object) {
+        var _b, _c;
+        if (this.revive) {
+            const constructor = this.resolver.getName(object);
+            if (constructor) {
+                const proto = Object.getPrototypeOf(object);
+                if (this.resolver.getPrototype(constructor) !== proto) {
+                    throw new this.Error('Constructor mismatch!');
+                }
+                else {
+                    object[this.prefix] = constructor;
+                }
+            }
+        }
+        object[this.refcode] = (_b = this.table) === null || _b === void 0 ? void 0 : _b.length;
+        (_c = this.table) === null || _c === void 0 ? void 0 : _c.push(object);
+        return object[this.refcode];
+    }
+    /**
+     * Create a builder object (encoding) for serialization.
+     * @param name The name of the constructor.
+     * @param value The value to pass to the constructor.
+     */
+    builder(name, value) {
+        const builder = {};
+        builder[this.buildcode] = name;
+        builder[this.valuecode] = value;
+        return builder;
+    }
+    /**
+     * Build a value from a deserialized builder.
+     * @param ref
+     * @see http://stackoverflow.com/a/14378462
+     * @see http://nullprogram.com/blog/2013/03/24/
+     */
+    build(ref) {
+        const type = ref[this.buildcode].split(/\./).reduce((object, name) => {
+            return object[name];
+        }, Resurrect.GLOBAL);
+        /* Brilliant hack by kybernetikos: */
+        const args = [null].concat(ref[this.valuecode]);
+        const factory = type.bind.apply(type, args);
+        const result = new factory();
+        if (Resurrect.isPrimitive(result)) {
+            if (!result) {
+                return null;
+            }
+            return result.valueOf(); // unwrap
+        }
+        else {
+            return result;
+        }
+    }
+    /**
+     * Dereference or build an object or value from an encoding.
+     * @param ref
+     */
+    decode(ref) {
+        if (this.prefix in ref) {
+            return this.deref(ref);
+        }
+        else if (this.buildcode in ref) {
+            return this.build(ref);
+        }
+        else {
+            throw new this.Error('Unknown encoding.');
+        }
+    }
+    /**
+     * @param object
+     * @returns True if the provided object is tagged for serialization.
+     */
+    isTagged(object) {
+        return this.refcode in object && object[this.refcode] != null;
+    }
+    /**
+     * Visit root and all its ancestors, visiting atoms with f.
+     * @param root
+     * @param f
+     * @param replacer
+     * @returns A fresh copy of root to be serialized.
+     */
+    visit(root, f, replacer) {
+        if (Resurrect.isAtom(root)) {
+            return f(root);
+        }
+        else if (!this.isTagged(root)) {
+            let copy = null;
+            if (Resurrect.isArray(root)) {
+                copy = [];
+                // @ts-ignore
+                root[this.refcode] = this.tag(copy);
+                for (let i = 0; i < root.length; i++) {
+                    copy.push(this.visit(root[i], f, replacer));
+                }
+            }
+            else {
+                /* Object */
+                copy = Object.create(Object.getPrototypeOf(root));
+                root[this.refcode] = this.tag(copy);
+                for (const key in root) {
+                    let value = root[key];
+                    if (Object.prototype.hasOwnProperty.call(root, key)) {
+                        if (replacer && value !== undefined) {
+                            // Call replacer like JSON.stringify's replacer
+                            value = replacer.call(root, key, root[key]);
+                            if (value === undefined) {
+                                continue; // Omit from result
+                            }
+                        }
+                        copy[key] = this.visit(value, f, replacer);
+                    }
+                }
+            }
+            copy[this.origcode] = root;
+            return this.ref(copy);
+        }
+        else {
+            return this.ref(root);
+        }
+    }
+    /**
+     * Manage special atom values, possibly returning an encoding.
+     * @param atom
+     */
+    handleAtom(atom) {
+        var _b;
+        const Node = Resurrect.GLOBAL.Node || function () { };
+        if (Resurrect.isFunction(atom)) {
+            throw new this.Error("Can't serialize functions.");
+        }
+        else if (atom instanceof Node) {
+            const xmls = new XMLSerializer();
+            return this.builder('Resurrect.Node', [xmls.serializeToString(atom)]);
+        }
+        else if (Resurrect.isDate(atom)) {
+            return this.builder('Date', [atom.toISOString()]);
+        }
+        else if (Resurrect.isRegExp(atom)) {
+            const args = (_b = atom
+                .toString()
+                .match(/\/(.+)\/([gimy]*)/)) === null || _b === void 0 ? void 0 : _b.slice(1);
+            return this.builder('RegExp', args);
+        }
+        else if (atom === undefined) {
+            return this.ref(undefined);
+        }
+        else if (Resurrect.isNumber(atom) &&
+            (isNaN(atom) || !isFinite(atom))) {
+            return this.builder('Number', [atom.toString()]);
+        }
+        else {
+            return atom;
+        }
+    }
+    /**
+     * Hides intrusive keys from a user-supplied replacer.
+     * @param replacer function of two arguments (key, value)
+     * @returns A function that skips the replacer for intrusive keys.
+     */
+    replacerWrapper(replacer) {
+        const skip = new RegExp('^' + Resurrect.escapeRegExp(this.prefix));
+        return (k, v) => {
+            if (skip.test(k)) {
+                return v;
+            }
+            else {
+                return replacer(k, v);
+            }
+        };
+    }
+    /**
+     * Serialize an arbitrary JavaScript object, carefully preserving it.
+     * @param object
+     * @param replacer
+     * @param space
+     */
+    stringify(object, replacer, space) {
+        if (Resurrect.isFunction(replacer)) {
+            replacer = this.replacerWrapper(replacer);
+        }
+        else if (Resurrect.isArray(replacer)) {
+            const acceptKeys = replacer;
+            replacer = (k, v) => {
+                return acceptKeys.indexOf(k) >= 0 ? v : undefined;
+            };
+        }
+        if (Resurrect.isAtom(object)) {
+            return JSON.stringify(this.handleAtom(object), replacer, space);
+        }
+        else {
+            this.table = [];
+            this.visit(object, this.handleAtom.bind(this), replacer);
+            for (let i = 0; i < this.table.length; i++) {
+                if (this.cleanup) {
+                    delete this.table[i][this.origcode][this.refcode];
+                }
+                else {
+                    this.table[i][this.origcode][this.refcode] = null;
+                }
+                delete this.table[i][this.refcode];
+                delete this.table[i][this.origcode];
+            }
+            const table = this.table;
+            this.table = null;
+            return JSON.stringify(table, null, space);
+        }
+    }
+    /**
+     * Restore the __proto__ of the given object to the proper value.
+     * @param object
+     * @returns Its argument, or a copy, with the prototype restored.
+     */
+    fixPrototype(object) {
+        if (this.prefix in object) {
+            const name = object[this.prefix];
+            const prototype = this.resolver.getPrototype(name);
+            if ('__proto__' in object) {
+                object.__proto__ = prototype;
+                if (this.cleanup) {
+                    delete object[this.prefix];
+                }
+                return object;
+            }
+            else {
+                // IE
+                const copy = Object.create(prototype);
+                for (const key in object) {
+                    if (Object.prototype.hasOwnProperty.call(object, key) &&
+                        key !== this.prefix) {
+                        copy[key] = object[key];
+                    }
+                }
+                return copy;
+            }
+        }
+        else {
+            return object;
+        }
+    }
+    /**
+     * Deserialize an encoded object, restoring circularity and behavior.
+     * @param string
+     * @returns The decoded object or value.
+     */
+    resurrect(string) {
+        let result = null;
+        const data = JSON.parse(string);
+        if (Resurrect.isArray(data)) {
+            this.table = data;
+            /* Restore __proto__. */
+            if (this.revive) {
+                for (let i = 0; i < this.table.length; i++) {
+                    this.table[i] = this.fixPrototype(this.table[i]);
+                }
+            }
+            /* Re-establish object references and construct atoms. */
+            for (let i = 0; i < this.table.length; i++) {
+                const object = this.table[i];
+                for (const key in object) {
+                    if (Object.prototype.hasOwnProperty.call(object, key)) {
+                        if (!Resurrect.isAtom(object[key])) {
+                            object[key] = this.decode(object[key]);
+                        }
+                    }
+                }
+            }
+            result = this.table[0];
+        }
+        else if (Resurrect.isObject(data)) {
+            this.table = [];
+            result = this.decode(data);
+        }
+        else {
+            result = data;
+        }
+        this.table = null;
+        return result;
+    }
+}
 /**
  * Portable access to the global object (window, global).
  * Uses indirect eval.
  * @constant
  */
 Resurrect.GLOBAL = (0, eval)('this');
-
-/**
- * Escape special regular expression characters in a string.
- * @param {string} string
- * @returns {string} The string escaped for exact matches.
- * @see http://stackoverflow.com/a/6969486
- */
-Resurrect.escapeRegExp = function (string) {
-    return string.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-};
-
-/* Helper Objects */
-
-/**
- * @param {string} [message]
- * @constructor
- */
-Resurrect.prototype.Error = function ResurrectError(message) {
-    this.message = message || '';
-    this.stack = new Error().stack;
-};
-Resurrect.prototype.Error.prototype = Object.create(Error.prototype);
-Resurrect.prototype.Error.prototype.name = 'ResurrectError';
-
-/**
- * Resolves prototypes through the properties on an object and
- * constructor names.
- * @param {Object} scope
- * @constructor
- */
-Resurrect.NamespaceResolver = function(scope) {
-    this.scope = scope;
-};
-
-/**
- * Gets the prototype of the given property name from an object. If
- * not found, it throws an error.
- * @param {string} name
- * @returns {Object}
- * @method
- */
-Resurrect.NamespaceResolver.prototype.getPrototype = function(name) {
-    var constructor = this.scope[name];
-    if (constructor) {
-        return constructor.prototype;
-    } else {
-        throw new Resurrect.prototype.Error('Unknown constructor: ' + name);
-    }
-};
-
-/**
- * Get the prototype name for an object, to be fetched later with getPrototype.
- * @param {Object} object
- * @returns {?string} Null if the constructor is Object.
- * @method
- */
-Resurrect.NamespaceResolver.prototype.getName = function(object) {
-    var constructor = object.constructor.name;
-    if (constructor == null) { // IE
-        var funcPattern = /^\s*function\s*([A-Za-z0-9_$]*)/;
-        constructor = funcPattern.exec(object.constructor)[1];
-    }
-
-    if (constructor === '') {
-        var msg = "Can't serialize objects with anonymous constructors.";
-        throw new Resurrect.prototype.Error(msg);
-    } else if (constructor === 'Object' || constructor === 'Array') {
-        return null;
-    } else {
-        return constructor;
-    }
-};
-
-/* Set the default resolver searches the global object. */
-Resurrect.prototype.resolver =
-    new Resurrect.NamespaceResolver(Resurrect.GLOBAL);
-
-/**
- * Create a DOM node from HTML source; behaves like a constructor.
- * @param {string} html
- * @constructor
- */
-Resurrect.Node = function(html) {
-    var div = document.createElement('div');
-    div.innerHTML = html;
-    return div.firstChild;
-};
-
-/* Type Tests */
-
-/**
- * @param {string} type
- * @returns {Function} A function that tests for type.
- */
-Resurrect.is = function(type) {
-    var string = '[object ' + type + ']';
-    return function(object) {
-        return Object.prototype.toString.call(object) === string;
-    };
-};
-
-Resurrect.isArray = Resurrect.is('Array');
+Resurrect.NamespaceResolver = NamespaceResolver;
 Resurrect.isString = Resurrect.is('String');
 Resurrect.isBoolean = Resurrect.is('Boolean');
 Resurrect.isNumber = Resurrect.is('Number');
@@ -453,329 +580,184 @@ Resurrect.isFunction = Resurrect.is('Function');
 Resurrect.isDate = Resurrect.is('Date');
 Resurrect.isRegExp = Resurrect.is('RegExp');
 Resurrect.isObject = Resurrect.is('Object');
+exports["default"] = Resurrect;
 
-Resurrect.isAtom = function(object) {
-    return !Resurrect.isObject(object) && !Resurrect.isArray(object);
-};
 
-/**
- * @param {*} object
- * @returns {boolean} True if object is a primitive or a primitive wrapper.
- */
-Resurrect.isPrimitive = function(object) {
-    return object == null ||
-        Resurrect.isNumber(object) ||
-        Resurrect.isString(object) ||
-        Resurrect.isBoolean(object);
-};
+/***/ }),
 
-/* Methods */
+/***/ 954:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-/**
- * Create a reference (encoding) to an object.
- * @param {(Object|undefined)} object
- * @returns {Object}
- * @method
- */
-Resurrect.prototype.ref = function(object) {
-    var ref = {};
-    if (object === undefined) {
-        ref[this.prefix] = -1;
-    } else {
-        ref[this.prefix] = object[this.refcode];
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
     }
-    return ref;
-};
-
-/**
- * Lookup an object in the table by reference object.
- * @param {Object} ref
- * @returns {(Object|undefined)}
- * @method
- */
-Resurrect.prototype.deref = function(ref) {
-    return this.table[ref[this.prefix]];
-};
-
-/**
- * Put a temporary identifier on an object and store it in the table.
- * @param {Object} object
- * @returns {number} The unique identifier number.
- * @method
- */
-Resurrect.prototype.tag = function(object) {
-    if (this.revive) {
-        var constructor = this.resolver.getName(object);
-        if (constructor) {
-            var proto = Object.getPrototypeOf(object);
-            if (this.resolver.getPrototype(constructor) !== proto) {
-                throw new this.Error('Constructor mismatch!');
-            } else {
-                object[this.prefix] = constructor;
-            }
-        }
-    }
-    object[this.refcode] = this.table.length;
-    this.table.push(object);
-    return object[this.refcode];
-};
-
-/**
- * Create a builder object (encoding) for serialization.
- * @param {string} name The name of the constructor.
- * @param value The value to pass to the constructor.
- * @returns {Object}
- * @method
- */
-Resurrect.prototype.builder = function(name, value) {
-    var builder = {};
-    builder[this.buildcode] = name;
-    builder[this.valuecode] = value;
-    return builder;
-};
-
-/**
- * Build a value from a deserialized builder.
- * @param {Object} ref
- * @returns {Object}
- * @method
- * @see http://stackoverflow.com/a/14378462
- * @see http://nullprogram.com/blog/2013/03/24/
- */
-Resurrect.prototype.build = function(ref) {
-    var type = ref[this.buildcode].split(/\./).reduce(function(object, name) {
-        return object[name];
-    }, Resurrect.GLOBAL);
-    /* Brilliant hack by kybernetikos: */
-    var args = [null].concat(ref[this.valuecode]);
-    var factory = type.bind.apply(type, args);
-    var result = new factory();
-    if (Resurrect.isPrimitive(result)) {
-        return result.valueOf(); // unwrap
-    } else {
-        return result;
-    }
-};
-
-/**
- * Dereference or build an object or value from an encoding.
- * @param {Object} ref
- * @returns {(Object|undefined)}
- * @method
- */
-Resurrect.prototype.decode = function(ref) {
-    if (this.prefix in ref) {
-        return this.deref(ref);
-    } else if (this.buildcode in ref) {
-        return this.build(ref);
-    } else {
-        throw new this.Error('Unknown encoding.');
-    }
-};
-
-/**
- * @param {Object} object
- * @returns {boolean} True if the provided object is tagged for serialization.
- * @method
- */
-Resurrect.prototype.isTagged = function(object) {
-    return (this.refcode in object) && (object[this.refcode] != null);
-};
-
-/**
- * Visit root and all its ancestors, visiting atoms with f.
- * @param {*} root
- * @param {Function} f
- * @param {Function} replacer
- * @returns {*} A fresh copy of root to be serialized.
- * @method
- */
-Resurrect.prototype.visit = function(root, f, replacer) {
-    if (Resurrect.isAtom(root)) {
-        return f(root);
-    } else if (!this.isTagged(root)) {
-        var copy = null;
-        if (Resurrect.isArray(root)) {
-            copy = [];
-            root[this.refcode] = this.tag(copy);
-            for (var i = 0; i < root.length; i++) {
-                copy.push(this.visit(root[i], f, replacer));
-            }
-        } else { /* Object */
-            copy = Object.create(Object.getPrototypeOf(root));
-            root[this.refcode] = this.tag(copy);
-            for (var key in root) {
-                var value = root[key];
-                if (root.hasOwnProperty(key)) {
-                    if (replacer && value !== undefined) {
-                        // Call replacer like JSON.stringify's replacer
-                        value = replacer.call(root, key, root[key]);
-                        if (value === undefined) {
-                            continue; // Omit from result
-                        }
-                    }
-                    copy[key] = this.visit(value, f, replacer);
-                }
-            }
-        }
-        copy[this.origcode] = root;
-        return this.ref(copy);
-    } else {
-        return this.ref(root);
-    }
-};
-
-/**
- * Manage special atom values, possibly returning an encoding.
- * @param {*} atom
- * @returns {*}
- * @method
- */
-Resurrect.prototype.handleAtom = function(atom) {
-    var Node = Resurrect.GLOBAL.Node || function() {};
-    if (Resurrect.isFunction(atom)) {
-        throw new this.Error("Can't serialize functions.");
-    } else if (atom instanceof Node) {
-        var xmls = new XMLSerializer();
-        return this.builder('Resurrect.Node', [xmls.serializeToString(atom)]);
-    } else if (Resurrect.isDate(atom)) {
-        return this.builder('Date', [atom.toISOString()]);
-    } else if (Resurrect.isRegExp(atom)) {
-        var args = atom.toString().match(/\/(.+)\/([gimy]*)/).slice(1);
-        return this.builder('RegExp', args);
-    } else if (atom === undefined) {
-        return this.ref(undefined);
-    } else if (Resurrect.isNumber(atom) && (isNaN(atom) || !isFinite(atom))) {
-        return this.builder('Number', [atom.toString()]);
-    } else {
-        return atom;
-    }
-};
-
-/**
- * Hides intrusive keys from a user-supplied replacer.
- * @param {Function} replacer function of two arguments (key, value)
- * @returns {Function} A function that skips the replacer for intrusive keys.
- * @method
- */
-Resurrect.prototype.replacerWrapper = function(replacer) {
-    var skip = new RegExp('^' + Resurrect.escapeRegExp(this.prefix));
-    return function(k, v) {
-        if (skip.test(k)) {
-            return v;
-        } else {
-            return replacer(k, v);
-        }
-    };
-};
-
-/**
- * Serialize an arbitrary JavaScript object, carefully preserving it.
- * @param {*} object
- * @param {(Function|Array)} replacer
- * @param {string} space
- * @method
- */
-Resurrect.prototype.stringify = function(object, replacer, space) {
-    if (Resurrect.isFunction(replacer)) {
-        replacer = this.replacerWrapper(replacer);
-    } else if (Resurrect.isArray(replacer)) {
-        var acceptKeys = replacer;
-        replacer = function(k, v) {
-            return acceptKeys.indexOf(k) >= 0 ? v : undefined;
-        };
-    }
-    if (Resurrect.isAtom(object)) {
-        return JSON.stringify(this.handleAtom(object), replacer, space);
-    } else {
-        this.table = [];
-        this.visit(object, this.handleAtom.bind(this), replacer);
-        for (var i = 0; i < this.table.length; i++) {
-            if (this.cleanup) {
-                delete this.table[i][this.origcode][this.refcode];
-            } else {
-                this.table[i][this.origcode][this.refcode] = null;
-            }
-            delete this.table[i][this.refcode];
-            delete this.table[i][this.origcode];
-        }
-        var table = this.table;
-        this.table = null;
-        return JSON.stringify(table, null, space);
-    }
-};
-
-/**
- * Restore the __proto__ of the given object to the proper value.
- * @param {Object} object
- * @returns {Object} Its argument, or a copy, with the prototype restored.
- * @method
- */
-Resurrect.prototype.fixPrototype = function(object) {
-    if (this.prefix in object) {
-        var name = object[this.prefix];
-        var prototype = this.resolver.getPrototype(name);
-        if ('__proto__' in object) {
-            object.__proto__ = prototype;
-            if (this.cleanup) {
-                delete object[this.prefix];
-            }
-            return object;
-        } else { // IE
-            var copy = Object.create(prototype);
-            for (var key in object) {
-                if (object.hasOwnProperty(key) && key !== this.prefix) {
-                    copy[key] = object[key];
-                }
-            }
-            return copy;
-        }
-    } else {
-        return object;
-    }
-};
-
-/**
- * Deserialize an encoded object, restoring circularity and behavior.
- * @param {string} string
- * @returns {*} The decoded object or value.
- * @method
- */
-Resurrect.prototype.resurrect = function(string) {
-    var result = null;
-    var data = JSON.parse(string);
-    if (Resurrect.isArray(data)) {
-        this.table = data;
-        /* Restore __proto__. */
-        if (this.revive) {
-            for (var i = 0; i < this.table.length; i++) {
-                this.table[i] = this.fixPrototype(this.table[i]);
-            }
-        }
-        /* Re-establish object references and construct atoms. */
-        for (i = 0; i < this.table.length; i++) {
-            var object = this.table[i];
-            for (var key in object) {
-                if (object.hasOwnProperty(key)) {
-                    if (!(Resurrect.isAtom(object[key]))) {
-                        object[key] = this.decode(object[key]);
-                    }
-                }
-            }
-        }
-        result = this.table[0];
-    } else if (Resurrect.isObject(data)) {
-        this.table = [];
-        result = this.decode(data);
-    } else {
-        result = data;
-    }
-    this.table = null;
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ResurrectExtend = void 0;
+const resurrect_1 = __importDefault(__webpack_require__(332));
+const MatterTypes = __importStar(__webpack_require__(381));
+const Matter = MatterTypes.default;
+class ResurrectExtend extends resurrect_1.default {
+    constructor() {
+        super(...arguments);
+        this.parse = () => { };
+    }
+}
+exports.ResurrectExtend = ResurrectExtend;
+/**
+ * An (experimental) tool for serializing matter.js worlds.
+ * @module Serializer
+ */
+class Serializer {
+    /**
+     * Creates a serializer.
+     * @return A serializer
+     */
+    static create() {
+        const serializer = new ResurrectExtend({ prefix: '$', cleanup: true });
+        serializer.parse = serializer.resurrect;
+        return serializer;
+    }
+    /**
+     * Clones an object using a serializer and assigns it a new id
+     * @function Serializer.clone
+     * @param serializer
+     * @param object
+     * @return The clone
+     */
+    static clone(serializer, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    object) {
+        const clone = serializer.parse(Serializer.serialise(serializer, object));
+        clone.id = Matter.Common.nextId();
+        return clone;
+    }
+    /**
+     * Saves world state to local storage
+     * @function Serializer.saveState
+     * @param serializer
+     * @param engine
+     * @param key
+     */
+    static saveState(serializer, engine, key) {
+        localStorage.setItem(key, Serializer.serialise(serializer, engine.world));
+    }
+    /**
+     * Loads world state from local storage
+     * @function Serializer.loadState
+     * @param serializer
+     * @param engine
+     * @param key
+     */
+    static loadState(serializer, engine, key) {
+        const item = localStorage.getItem(key);
+        if (!item) {
+            return;
+        }
+        const loadedWorld = serializer.parse(item);
+        if (loadedWorld) {
+            Matter.Engine.merge(engine, {
+                world: loadedWorld,
+            });
+        }
+    }
+    /**
+     * Serialises the object using the given serializer and a Matter-specific replacer
+     * @function Serializer.serialise
+     * @param serializer
+     * @param object
+     * @param indent
+     * @return The serialised object
+     */
+    static serialise(serializer, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    object, indent = 0) {
+        return serializer.stringify(object, 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (key, value) => {
+            // limit precision of floats
+            if (!/^#/.exec(key) && typeof value === 'number') {
+                const fixed = parseFloat(value.toFixed(3));
+                // do not limit if limiting will cause value to zero
+                // TODO: this should ideally dynamically find the SF precision required
+                if (fixed === 0 && value !== 0) {
+                    return value;
+                }
+                return fixed;
+            }
+            return value;
+        }, indent);
+    }
+}
+exports["default"] = Serializer;
 
+
+/***/ }),
+
+/***/ 381:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__381__;
 
 /***/ })
 
-/******/ });
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__(954);
+/******/ 	
+/******/ 	return __webpack_exports__;
+/******/ })()
+;
 });
