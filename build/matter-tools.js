@@ -1,5 +1,5 @@
 /*!
- * @rozelin/matter-tools 1.0.0 by @Rozelin
+ * @rozelin/matter-tools 1.0.1 by @Rozelin
  * https://github.com/Rozelin-dc/matter-tools
  * License MIT
  *
@@ -1108,12 +1108,9 @@ class Demo {
      * @function create
      * @param options
      */
-    static create(options) {
+    static create(options = {}) {
         var _a;
-        const demo = Object.assign({
-            example: {
-                instance: null,
-            },
+        const defaultDemo = {
             examples: [],
             resetOnOrientation: false,
             preventZoom: false,
@@ -1134,8 +1131,8 @@ class Demo {
                 inspector: null,
                 gui: null,
             },
-            dom: {},
-        }, options || {});
+        };
+        const demo = Matter.Common.extend(defaultDemo, options);
         if (!options.toolbar ||
             (demo.examples.length > 1 &&
                 options.toolbar &&
@@ -1162,7 +1159,7 @@ class Demo {
             demo.appendTo.appendChild(demo.dom.root);
         }
         if (demo.startExample) {
-            Demo.start(demo);
+            Demo.start(demo, demo.startExample);
         }
         return demo;
     }
@@ -1173,11 +1170,14 @@ class Demo {
      * @param demo
      * @param initalExampleId example to start (defaults to first)
      */
-    static start(demo, initialExampleId = demo.examples[0].id) {
+    static start(demo, initialExampleId) {
+        let exampleId = typeof initialExampleId === 'string'
+            ? initialExampleId
+            : demo.examples[0].id;
         if (window.location.hash.length > 0) {
-            initialExampleId = window.location.hash.slice(1);
+            exampleId = window.location.hash.slice(1);
         }
-        Demo.setExampleById(demo, initialExampleId);
+        Demo.setExampleById(demo, exampleId);
     }
     /**
      * Stops the currently running example in the demo.
@@ -1224,44 +1224,45 @@ class Demo {
      * @param example
      */
     static setExample(demo, example) {
-        var _a;
-        if (example) {
-            let instance = demo.example.instance;
-            if (instance) {
-                instance.stop();
-                if (instance.canvas) {
-                    instance.canvas.parentElement.removeChild(instance.canvas);
-                }
-            }
-            window.location.hash = example.id;
-            demo.example.instance = null;
-            // @ts-ignore
-            demo.example = example;
-            demo.example.instance = instance = example.init(demo);
-            if (!instance.canvas && instance.render) {
-                instance.canvas = instance.render.canvas;
-            }
-            if (instance.canvas) {
-                (_a = demo.dom.root) === null || _a === void 0 ? void 0 : _a.appendChild(instance.canvas);
-            }
-            if (demo.dom.exampleSelect) {
-                demo.dom.exampleSelect.value = example.id;
-            }
-            if (demo.dom.buttonSource) {
-                demo.dom.buttonSource.href = example.sourceLink || demo.url || '#';
-            }
-            setTimeout(function () {
-                if (demo.tools.inspector) {
-                    Demo.setInspector(demo, true);
-                }
-                if (demo.tools.gui) {
-                    Demo.setGui(demo, true);
-                }
-            }, 500);
-        }
-        else {
+        var _a, _b;
+        if (!example) {
             Demo.setExample(demo, demo.examples[0]);
+            return;
         }
+        const prevExample = demo.example;
+        let instance = prevExample === null || prevExample === void 0 ? void 0 : prevExample.instance;
+        if (instance) {
+            instance.stop();
+            if (instance.canvas) {
+                (_a = instance.canvas.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(instance.canvas);
+            }
+        }
+        if (prevExample) {
+            prevExample.instance = null;
+        }
+        window.location.hash = example.id;
+        demo.example = example;
+        demo.example.instance = instance = example.init(demo);
+        if (!instance.canvas && instance.render) {
+            instance.canvas = instance.render.canvas;
+        }
+        if (instance.canvas) {
+            (_b = demo.dom.root) === null || _b === void 0 ? void 0 : _b.appendChild(instance.canvas);
+        }
+        if (demo.dom.exampleSelect) {
+            demo.dom.exampleSelect.value = example.id;
+        }
+        if (demo.dom.buttonSource) {
+            demo.dom.buttonSource.href = example.sourceLink || demo.url || '#';
+        }
+        setTimeout(function () {
+            if (demo.tools.inspector) {
+                Demo.setInspector(demo, true);
+            }
+            if (demo.tools.gui) {
+                Demo.setGui(demo, true);
+            }
+        }, 500);
     }
     /**
      * Enables or disables the inspector tool.
@@ -1527,7 +1528,7 @@ Demo._isIOS = window.navigator &&
     /iPad|iPhone|iPod/.test(navigator.userAgent) &&
     // @ts-ignore
     !window.MSStream;
-Demo._matterLink = 'https://brm.io/matter-js/';
+Demo._matterLink = 'https://github.com/Rozelin-dc/matter-ts';
 exports["default"] = Demo;
 
 
