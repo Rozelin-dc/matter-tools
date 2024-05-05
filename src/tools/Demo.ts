@@ -7,17 +7,17 @@ const Matter = MatterTypes.default
 
 export interface IDemo {
   inline?: boolean
-  example: IDemoExample
+  example?: IDemoExample
   examples: IDemoExample[]
   resetOnOrientation: boolean
   preventZoom: boolean
   fullPage: boolean
-  startExample: boolean
+  startExample: string | boolean
   appendTo: HTMLElement
   url?: string
   toolbar: {
-    title: string
-    url: string
+    title: string | null
+    url: string | null
     reset: boolean
     source: boolean
     inspector: boolean
@@ -26,8 +26,8 @@ export interface IDemo {
     exampleSelect: boolean
   }
   tools: {
-    inspector: IInspector | false | null
-    gui: IGui | false | null
+    inspector: IInspector | boolean | null
+    gui: IGui | boolean | null
   }
   dom: IDemoDom
 }
@@ -35,10 +35,17 @@ export interface IDemo {
 export interface IDemoExample {
   id: string
   name: string
-  init: (demo: IDemo) => IDemoExample['instance']
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  instance?: any
+  init: (demo: IDemo) => IDemoExampleInstance
+  instance: IDemoExampleInstance | null
   sourceLink?: string
+}
+
+export interface IDemoExampleInstance {
+  engine: MatterTypes.Engine.IEngine
+  render: MatterTypes.Render.IRender
+  runner: MatterTypes.Runner.IRunner
+  canvas: HTMLCanvasElement
+  stop: () => void
 }
 
 export interface IDemoDom {
@@ -63,7 +70,7 @@ export default class Demo {
     /iPad|iPhone|iPod/.test(navigator.userAgent) &&
     // @ts-ignore
     !window.MSStream
-  protected static _matterLink = 'https://brm.io/matter-js/'
+  protected static _matterLink = 'https://github.com/Rozelin-dc/matter-ts'
 
   /**
    * Creates a new demo instance.
@@ -71,36 +78,34 @@ export default class Demo {
    * @function create
    * @param options
    */
-  public static create(options: Partial<IDemo>): IDemo {
-    const demo: IDemo = Object.assign(
-      {
-        example: {
-          instance: null,
-        },
-        examples: [],
-        resetOnOrientation: false,
-        preventZoom: false,
-        fullPage: false,
-        startExample: true,
-        appendTo: document.body,
-        toolbar: {
-          title: null,
-          url: null,
-          reset: true,
-          source: false,
-          inspector: false,
-          tools: false,
-          fullscreen: true,
-          exampleSelect: false,
-        },
-        tools: {
-          inspector: null,
-          gui: null,
-        },
-        dom: {},
+  public static create(
+    options: MatterTypes.Common.DeepPartial<IDemo> = {}
+  ): IDemo {
+    const defaultDemo: Omit<IDemo, 'dom'> & {
+      dom?: Partial<IDemoDom>
+    } = {
+      examples: [],
+      resetOnOrientation: false,
+      preventZoom: false,
+      fullPage: false,
+      startExample: true,
+      appendTo: document.body,
+      toolbar: {
+        title: null,
+        url: null,
+        reset: true,
+        source: false,
+        inspector: false,
+        tools: false,
+        fullscreen: true,
+        exampleSelect: false,
       },
-      options || {}
-    )
+      tools: {
+        inspector: null,
+        gui: null,
+      },
+    }
+    const demo = Matter.Common.extend(defaultDemo, options) as unknown as IDemo
 
     if (
       !options.toolbar ||
@@ -137,7 +142,7 @@ export default class Demo {
     }
 
     if (demo.startExample) {
-      Demo.start(demo)
+      Demo.start(demo, demo.startExample)
     }
 
     return demo
@@ -150,15 +155,16 @@ export default class Demo {
    * @param demo
    * @param initalExampleId example to start (defaults to first)
    */
-  public static start(
-    demo: IDemo,
-    initialExampleId: string = demo.examples[0].id
-  ): void {
+  public static start(demo: IDemo, initialExampleId?: string | boolean): void {
+    let exampleId =
+      typeof initialExampleId === 'string'
+        ? initialExampleId
+        : demo.examples[0].id
     if (window.location.hash.length > 0) {
-      initialExampleId = window.location.hash.slice(1)
+      exampleId = window.location.hash.slice(1)
     }
 
-    Demo.setExampleById(demo, initialExampleId)
+    Demo.setExampleById(demo, exampleId)
   }
 
   /**
@@ -211,49 +217,51 @@ export default class Demo {
    * @param example
    */
   public static setExample(demo: IDemo, example?: IDemoExample): void {
-    if (example) {
-      let instance = demo.example.instance
+    if (!example) {
+      Demo.setExample(demo, demo.examples[0])
+      return
+    }
 
-      if (instance) {
-        instance.stop()
-
-        if (instance.canvas) {
-          instance.canvas.parentElement.removeChild(instance.canvas)
-        }
-      }
-
-      window.location.hash = example.id
-      demo.example.instance = null
-      // @ts-ignore
-      demo.example = example
-      demo.example.instance = instance = example.init(demo)
-
-      if (!instance.canvas && instance.render) {
-        instance.canvas = instance.render.canvas
-      }
+    const prevExample = demo.example
+    let instance = prevExample?.instance
+    if (instance) {
+      instance.stop()
 
       if (instance.canvas) {
-        demo.dom.root?.appendChild(instance.canvas)
+        instance.canvas.parentElement?.removeChild(instance.canvas)
       }
-      if (demo.dom.exampleSelect) {
-        demo.dom.exampleSelect.value = example.id
-      }
-      if (demo.dom.buttonSource) {
-        demo.dom.buttonSource.href = example.sourceLink || demo.url || '#'
-      }
-
-      setTimeout(function () {
-        if (demo.tools.inspector) {
-          Demo.setInspector(demo, true)
-        }
-
-        if (demo.tools.gui) {
-          Demo.setGui(demo, true)
-        }
-      }, 500)
-    } else {
-      Demo.setExample(demo, demo.examples[0])
     }
+    if (prevExample) {
+      prevExample.instance = null
+    }
+
+    window.location.hash = example.id
+    demo.example = example
+    demo.example.instance = instance = example.init(demo)
+
+    if (!instance.canvas && instance.render) {
+      instance.canvas = instance.render.canvas
+    }
+
+    if (instance.canvas) {
+      demo.dom.root?.appendChild(instance.canvas)
+    }
+    if (demo.dom.exampleSelect) {
+      demo.dom.exampleSelect.value = example.id
+    }
+    if (demo.dom.buttonSource) {
+      demo.dom.buttonSource.href = example.sourceLink || demo.url || '#'
+    }
+
+    setTimeout(function () {
+      if (demo.tools.inspector) {
+        Demo.setInspector(demo, true)
+      }
+
+      if (demo.tools.gui) {
+        Demo.setGui(demo, true)
+      }
+    }, 500)
   }
 
   /**
@@ -270,12 +278,12 @@ export default class Demo {
       return
     }
 
-    const instance = demo.example.instance
+    const instance = demo.example!.instance
 
     Demo._destroyTools(demo, true, false)
     demo.dom.root?.classList.toggle('matter-inspect-active', true)
 
-    demo.tools.inspector = Inspector.create(instance.engine, instance.render)
+    demo.tools.inspector = Inspector.create(instance!.engine, instance!.render)
   }
 
   /**
@@ -292,15 +300,15 @@ export default class Demo {
       return
     }
 
-    const instance = demo.example.instance
+    const instance = demo.example!.instance
 
     Demo._destroyTools(demo, false, true)
     demo.dom.root?.classList.toggle('matter-gui-active', true)
 
     demo.tools.gui = Gui.create(
-      instance.engine,
-      instance.runner,
-      instance.render
+      instance!.engine,
+      instance!.runner,
+      instance!.render
     )
   }
 
