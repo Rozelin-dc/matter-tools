@@ -1,18 +1,19 @@
 import { IGui } from './Gui';
 import { IInspector } from './Inspector';
+import * as MatterTypes from '@rozelin/matter-ts';
 export interface IDemo {
     inline?: boolean;
-    example: IDemoExample;
+    example?: IDemoExample;
     examples: IDemoExample[];
     resetOnOrientation: boolean;
     preventZoom: boolean;
     fullPage: boolean;
-    startExample: boolean;
+    startExample: string | boolean;
     appendTo: HTMLElement;
     url?: string;
     toolbar: {
-        title: string;
-        url: string;
+        title: string | null;
+        url: string | null;
         reset: boolean;
         source: boolean;
         inspector: boolean;
@@ -21,17 +22,24 @@ export interface IDemo {
         exampleSelect: boolean;
     };
     tools: {
-        inspector: IInspector | false | null;
-        gui: IGui | false | null;
+        inspector: IInspector | boolean | null;
+        gui: IGui | boolean | null;
     };
     dom: IDemoDom;
 }
 export interface IDemoExample {
     id: string;
     name: string;
-    init: (demo: IDemo) => IDemoExample['instance'];
-    instance?: any;
+    init: (demo: IDemo) => IDemoExampleInstance;
+    instance: IDemoExampleInstance | null;
     sourceLink?: string;
+}
+export interface IDemoExampleInstance {
+    engine: MatterTypes.Engine.IEngine;
+    render: MatterTypes.Render.IRender;
+    runner: MatterTypes.Runner.IRunner;
+    canvas: HTMLCanvasElement;
+    stop: () => void;
 }
 export interface IDemoDom {
     root: HTMLElement | null;
@@ -57,7 +65,7 @@ export default class Demo {
      * @function create
      * @param options
      */
-    static create(options: Partial<IDemo>): IDemo;
+    static create(options?: MatterTypes.Common.DeepPartial<IDemo>): IDemo;
     /**
      * Starts a new demo instance by running the first or given example.
      * See example for options and usage.
@@ -65,7 +73,7 @@ export default class Demo {
      * @param demo
      * @param initalExampleId example to start (defaults to first)
      */
-    static start(demo: IDemo, initialExampleId?: string): void;
+    static start(demo: IDemo, initialExampleId?: string | boolean): void;
     /**
      * Stops the currently running example in the demo.
      * This requires that the `example.init` function returned
