@@ -32,7 +32,7 @@
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@rozelin/matter-ts": "^1.1.3",
+    "@rozelin/matter-ts": "^1.1.4",
     "@types/dat.gui": "^0.7.13",
     "@types/jquery": "^3.5.29",
     "@types/keymaster": "^1.6.33",
