@@ -1,5 +1,5 @@
 /*!
- * @rozelin/matter-tools 1.0.1 by @Rozelin
+ * @rozelin/matter-tools 1.0.2 by @Rozelin
  * https://github.com/Rozelin-dc/matter-tools
  * License MIT
  *
@@ -1760,7 +1760,6 @@ class Gui {
             render.open();
         }
         document.body.appendChild(gui.datGui.domElement);
-        console.log('dat.gui created');
     }
     static _addBody(gui) {
         const engine = gui.engine;

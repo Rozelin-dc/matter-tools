@@ -1,5 +1,5 @@
 /*!
- * @rozelin/matter-tools 1.0.1 by @Rozelin
+ * @rozelin/matter-tools 1.0.2 by @Rozelin
  * https://github.com/Rozelin-dc/matter-tools
  * License MIT
  *

@@ -1,5 +1,5 @@
 /*!
- * @rozelin/matter-tools 1.0.1 by @Rozelin
+ * @rozelin/matter-tools 1.0.2 by @Rozelin
  * https://github.com/Rozelin-dc/matter-tools
  * License MIT
  *
@@ -1108,8 +1108,16 @@ class Inspector {
         }
     }
     static _initControls(inspector) {
-        const controls = inspector.controls;
-        const $inspectorContainer = (0, jquery_1.default)('<div class="ins-container">'), $topPanel = (0, jquery_1.default)('<div class="ins-top-panel">'), $buttonGroup = (0, jquery_1.default)('<div class="ins-control-group">'), $searchBox = (0, jquery_1.default)('<input class="ins-search-box" type="search" placeholder="search">'), $importButton = (0, jquery_1.default)('<button class="ins-import-button ins-button">Import</button>'), $exportButton = (0, jquery_1.default)('<button class="ins-export-button ins-button">Export</button>'), $pauseButton = (0, jquery_1.default)('<button class="ins-pause-button ins-button">Pause</button>'), $helpButton = (0, jquery_1.default)('<button class="ins-help-button ins-button">Help</button>'), $addCompositeButton = (0, jquery_1.default)('<button aria-label="Add composite body" title="Add composite body" class="ins-add-button ins-button">+</button>');
+        const controls = inspector.controls || {};
+        const $inspectorContainer = (0, jquery_1.default)('<div class="ins-container">');
+        const $topPanel = (0, jquery_1.default)('<div class="ins-top-panel">');
+        const $buttonGroup = (0, jquery_1.default)('<div class="ins-control-group">');
+        const $searchBox = (0, jquery_1.default)('<input class="ins-search-box" type="search" placeholder="search">');
+        const $importButton = (0, jquery_1.default)('<button class="ins-import-button ins-button">Import</button>');
+        const $exportButton = (0, jquery_1.default)('<button class="ins-export-button ins-button">Export</button>');
+        const $pauseButton = (0, jquery_1.default)('<button class="ins-pause-button ins-button">Pause</button>');
+        const $helpButton = (0, jquery_1.default)('<button class="ins-help-button ins-button">Help</button>');
+        const $addCompositeButton = (0, jquery_1.default)('<button aria-label="Add composite body" title="Add composite body" class="ins-add-button ins-button">+</button>');
         if (Serializer_1.default) {
             $buttonGroup.append($pauseButton, $importButton, $exportButton, $helpButton);
         }
@@ -1149,6 +1157,7 @@ class Inspector {
                 worldTree.search(value);
             }, 250);
         });
+        inspector.controls = controls;
     }
     static _showHelp() {
         let help = 'Matter Tools\n\n';
