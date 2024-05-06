@@ -1,6 +1,4 @@
-var sourceLinkRoot = 'https://github.com/liabru/matter-tools/blob/master';
-
-MatterTools.Demo.create({
+MatterTools.default.Demo.create({
   fullPage: true,
   preventZoom: true,
   startExample: true,
@@ -8,32 +6,30 @@ MatterTools.Demo.create({
 
   toolbar: {
     title: 'matter-tools',
-    url: 'https://github.com/liabru/matter-tools',
+    url: 'https://github.com/Rozelin-dc/matter-tools',
     reset: true,
     source: true,
     inspector: true,
     tools: true,
     fullscreen: true,
-    exampleSelect: true
+    exampleSelect: true,
   },
 
   tools: {
     inspector: true,
-    gui: true
+    gui: true,
   },
-  
+
   examples: [
     {
       name: 'Basic',
       id: 'basic',
       init: Example.basic,
-      sourceLink: sourceLinkRoot + '/docs/examples/basic.js'
     },
     {
       name: 'Basic 2',
       id: 'basic-2',
       init: Example.basic,
-      sourceLink: sourceLinkRoot + '/docs/examples/basic.js'
-    }
-  ]
-});
+    },
+  ],
+})

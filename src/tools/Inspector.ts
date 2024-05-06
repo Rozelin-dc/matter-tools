@@ -219,29 +219,29 @@ export default class Inspector {
   }
 
   protected static _initControls(inspector: IInspector): void {
-    const controls = inspector.controls
+    const controls = inspector.controls || {}
 
-    const $inspectorContainer = $('<div class="ins-container">'),
-      $topPanel = $('<div class="ins-top-panel">'),
-      $buttonGroup = $('<div class="ins-control-group">'),
-      $searchBox = $(
-        '<input class="ins-search-box" type="search" placeholder="search">'
-      ),
-      $importButton = $(
-        '<button class="ins-import-button ins-button">Import</button>'
-      ),
-      $exportButton = $(
-        '<button class="ins-export-button ins-button">Export</button>'
-      ),
-      $pauseButton = $(
-        '<button class="ins-pause-button ins-button">Pause</button>'
-      ),
-      $helpButton = $(
-        '<button class="ins-help-button ins-button">Help</button>'
-      ),
-      $addCompositeButton = $(
-        '<button aria-label="Add composite body" title="Add composite body" class="ins-add-button ins-button">+</button>'
-      )
+    const $inspectorContainer = $('<div class="ins-container">')
+    const $topPanel = $('<div class="ins-top-panel">')
+    const $buttonGroup = $('<div class="ins-control-group">')
+    const $searchBox = $(
+      '<input class="ins-search-box" type="search" placeholder="search">'
+    )
+    const $importButton = $(
+      '<button class="ins-import-button ins-button">Import</button>'
+    )
+    const $exportButton = $(
+      '<button class="ins-export-button ins-button">Export</button>'
+    )
+    const $pauseButton = $(
+      '<button class="ins-pause-button ins-button">Pause</button>'
+    )
+    const $helpButton = $(
+      '<button class="ins-help-button ins-button">Help</button>'
+    )
+    const $addCompositeButton = $(
+      '<button aria-label="Add composite body" title="Add composite body" class="ins-add-button ins-button">+</button>'
+    )
 
     if (Serializer) {
       $buttonGroup.append(
@@ -294,6 +294,8 @@ export default class Inspector {
         worldTree.search(value)
       }, 250)
     })
+
+    inspector.controls = controls
   }
 
   protected static _showHelp(): void {

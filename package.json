@@ -27,12 +27,12 @@
     "watch": "nodemon --watch webpack.config.js ./node_modules/.bin/webpack-dev-server --no-cache --mode development",
     "build": "webpack --mode=production",
     "build-split": "webpack --config webpack.split.config.js --mode=production --no-watch",
-    "build-demo": "mkdir -p docs/demo/lib && cp -r build/matter-tools.min.js docs/demo/lib & cp node_modules/matter-js/build/matter.min.js docs/demo/lib",
+    "build-demo": "rm -rf docs/lib && mkdir docs/lib && cp -f \"build/matter-tools.js\" \"node_modules/@rozelin/matter-ts/build/matter.js\" docs/lib",
     "lint": "eslint src/**/*.ts",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@rozelin/matter-ts": "^1.1.3",
+    "@rozelin/matter-ts": "^1.1.4",
     "@types/dat.gui": "^0.7.13",
     "@types/jquery": "^3.5.29",
     "@types/keymaster": "^1.6.33",

@@ -120,16 +120,6 @@ export default class Demo {
       demo.toolbar.fullscreen = false
     }
 
-    if (!Gui) {
-      demo.toolbar.tools = false
-      demo.tools.gui = false
-    }
-
-    if (!Inspector) {
-      demo.toolbar.inspector = false
-      demo.tools.inspector = false
-    }
-
     demo.dom = Demo._createDom(demo)
     Demo._bindDom(demo)
 
@@ -320,15 +310,17 @@ export default class Demo {
     const inspector = demo.tools.inspector
     const gui = demo.tools.gui
 
-    // @ts-ignore
-    if (destroyInspector && inspector && inspector !== true) {
-      Inspector.destroy(inspector)
+    if (destroyInspector) {
+      if (inspector && inspector !== true) {
+        Inspector.destroy(inspector)
+      }
       demo.tools.inspector = null
     }
 
-    // @ts-ignore
-    if (destroyGui && gui && gui !== true) {
-      Gui.destroy(gui)
+    if (destroyGui) {
+      if (gui && gui !== true) {
+        Gui.destroy(gui)
+      }
       demo.tools.gui = null
     }
   }
@@ -512,7 +504,7 @@ export default class Demo {
                 </svg>
               </button>
             </div>
-            <a class="matter-link" href="${Demo._matterLink}" title="matter.js" target="_blank">
+            <a class="matter-link" href="${Demo._matterLink}" title="matter.ts" target="_blank">
               <svg class="matter-logo" height="100" viewBox="0 952.04859 330 100" width="268" xmlns="http://www.w3.org/2000/svg">
                 <path id="m-triangle" style="fill:#76f09b;" d="m 115.83215,1052.3622 -57.916072,0 -57.916078053812107,0 L 28.958038,1002.2054 57.916077,952.04859 86.874114,1002.2054 Z" />
                 <path id="m-square" style="fill:#f55f5f" d="m 168.03172,952.36218 0,100.00002 100,0 0,-100.00002 -100,0 z" />
