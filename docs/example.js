@@ -1,22 +1,22 @@
 var Example = Example || {}
 
 Example.basic = function () {
-  var Engine = Matter.default.Engine,
-    Render = Matter.default.Render,
-    Runner = Matter.default.Runner,
-    Composites = Matter.default.Composites,
-    Common = Matter.default.Common,
-    MouseConstraint = Matter.default.MouseConstraint,
-    Mouse = Matter.default.Mouse,
-    World = Matter.default.World,
-    Bodies = Matter.default.Bodies
+  const Engine = Matter.default.Engine
+  const Render = Matter.default.Render
+  const Runner = Matter.default.Runner
+  const Composites = Matter.default.Composites
+  const Common = Matter.default.Common
+  const MouseConstraint = Matter.default.MouseConstraint
+  const Mouse = Matter.default.Mouse
+  const World = Matter.default.World
+  const Bodies = Matter.default.Bodies
 
   // create engine
-  var engine = Engine.create(),
-    world = engine.world
+  const engine = Engine.create()
+  const world = engine.world
 
   // create renderer
-  var render = Render.create({
+  const render = Render.create({
     element: document.body,
     engine: engine,
     options: {
@@ -29,18 +29,18 @@ Example.basic = function () {
   Render.run(render)
 
   // create runner
-  var runner = Runner.create()
+  const runner = Runner.create()
   Runner.run(runner, engine)
 
   // add bodies
-  var stack = Composites.stack(20, 20, 10, 5, 0, 0, function (x, y) {
-    var sides = Math.round(Common.random(1, 8))
+  const stack = Composites.stack(20, 20, 10, 5, 0, 0, function (x, y) {
+    let sides = Math.round(Common.random(1, 8))
 
     // triangles can be a little unstable, so avoid until fixed
     sides = sides === 3 ? 4 : sides
 
     // round the edges of some bodies
-    var chamfer = null
+    let chamfer = null
     if (sides > 2 && Common.random() > 0.7) {
       chamfer = {
         radius: 10,
@@ -84,7 +84,7 @@ Example.basic = function () {
   ])
 
   // add mouse control
-  var mouse = Mouse.create(render.canvas),
+  const mouse = Mouse.create(render.canvas),
     mouseConstraint = MouseConstraint.create(engine, {
       mouse: mouse,
       constraint: {

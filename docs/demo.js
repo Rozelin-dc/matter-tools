@@ -1,5 +1,3 @@
-var sourceLinkRoot = 'https://github.com/Rozelin-dc/matter-tools'
-
 MatterTools.default.Demo.create({
   fullPage: true,
   preventZoom: true,
